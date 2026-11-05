@@ -109,10 +109,13 @@ export const stageDuration = (effectId: string, fps: number) => {
   return LEAD_IN + Math.round((def?.defaultDuration ?? 2) * fps) + 12;
 };
 
-/** A good still frame for the thumbnail (middle of the effect). */
+// Fast camera moves peak early; the middle of the effect would look empty.
+const THUMB_AT: Record<string, number> = { 'zoom-through': 0.25, flash: 0.15, 'punch-zoom': 0.12 };
+
+/** A good still frame for the thumbnail (middle of the effect by default). */
 export const stageThumbFrame = (effectId: string, fps: number) => {
   const def = getEffect(effectId);
-  return LEAD_IN + Math.round((def?.defaultDuration ?? 2) * fps * 0.55);
+  return LEAD_IN + Math.round((def?.defaultDuration ?? 2) * fps * (THUMB_AT[effectId] ?? 0.55));
 };
 
 /** Text people can paste into Claude / ChatGPT to ask for this effect. */
