@@ -29,3 +29,9 @@ export const glass = (s: number, dark = true): React.CSSProperties => ({
   borderRadius: 36 * s,
   boxShadow: `0 ${20 * s}px ${60 * s}px rgba(0,0,0,0.35)`,
 });
+
+/**
+ * Use for any CSS filter on an element that has children (blur, grayscale…):
+ * the MP4 exporter only filters a whole subtree when a drop-shadow is in the chain.
+ */
+export const subtreeFilter = (f: string) => `${f} drop-shadow(0 0 0 rgba(0,0,0,0))`;

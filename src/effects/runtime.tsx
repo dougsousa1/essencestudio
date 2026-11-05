@@ -123,7 +123,9 @@ const VideoStyleHost: React.FC<{ placed: PlacedEffect[]; project: Project; timel
       style={{
         ...extra,
         transform: transforms.join(' ') || undefined,
-        filter: filters.join(' ') || undefined,
+        // The MP4 exporter only applies a filter to a whole subtree when the chain
+        // contains a drop-shadow, so a no-op one is appended.
+        filter: filters.length ? `${filters.join(' ')} drop-shadow(0 0 0 rgba(0,0,0,0))` : undefined,
         opacity,
       }}
     >

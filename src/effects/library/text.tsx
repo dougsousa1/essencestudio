@@ -315,7 +315,7 @@ const StrikeWord: React.FC<EffectRenderProps<MarkWordProps>> = ({ props, frame, 
           roughness={1.6}
           seed={3}
           // The line sits at the box centre: extend the box downwards so it crosses the x-height.
-          style={{ opacity: dim, paddingBottom: '0.22em', marginBottom: '-0.22em' }}
+          style={{ opacity: dim, paddingBottom: '0.26em', marginBottom: '-0.26em' }}
         >
           {text}
         </StrikeThrough>
@@ -459,7 +459,7 @@ const Ticker: React.FC<EffectRenderProps<TickerProps>> = ({ props, frame, fps, d
           position: 'absolute',
           left: -width * 0.15,
           width: width * 1.3,
-          top: height * 0.78 - bandH / 2,
+          top: height * 0.79 - bandH / 2,
           height: bandH,
           backgroundColor: accent,
           overflow: 'hidden',
@@ -560,7 +560,8 @@ const GlitchWord: React.FC<EffectRenderProps<GlitchProps>> = ({ props, frame, fp
   const r = (n: number) => (rand(tick * 13.37 + n * 7.91) - 0.5) * 2;
   const amp = (burst ? 18 : 3.5) * u;
   const flicker = frame < 0.3 * fps && rand(frame * 7.1) < 0.3 ? 0.25 : 1;
-  const strips = 6;
+  // Horizontal slices only while glitching (a single clean stack otherwise).
+  const strips = burst ? 6 : 1;
   const sh = lineH / strips;
   const padX = width * 0.12;
   const textStyle: React.CSSProperties = {
@@ -661,29 +662,29 @@ const LowerThird: React.FC<EffectRenderProps<LowerProps>> = ({ props, frame, fps
   );
   return (
     <AbsoluteFill>
-      <div style={{ position: 'absolute', left: width * 0.08, top: height * 0.64, display: 'flex', alignItems: 'stretch', filter: `drop-shadow(0 ${8 * u}px ${18 * u}px rgba(0,0,0,0.3))` }}>
+      <div style={{ position: 'absolute', left: width * 0.08, top: height * 0.6, display: 'flex', alignItems: 'stretch', filter: `drop-shadow(0 ${8 * u}px ${18 * u}px rgba(0,0,0,0.3))` }}>
         <div style={{ width: 10 * u, backgroundColor: accent, transform: `scaleY(${bar})`, transformOrigin: '50% 0%', marginRight: 10 * u, borderRadius: 2 * u }} />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {row(nameP, props.name || 'Marina Costa', {
             backgroundColor: accent,
             color: inkOn(accent),
             fontFamily: fontFamily(style.titleFont),
-            fontSize: 56 * u,
+            fontSize: 66 * u,
             fontWeight: 700,
             lineHeight: 1,
-            padding: `${18 * u}px ${28 * u}px`,
+            padding: `${20 * u}px ${32 * u}px`,
             whiteSpace: 'nowrap',
           })}
           {row(roleP, props.role || 'Criadora de conteúdo', {
             backgroundColor: '#141114',
             color: '#FFFFFF',
             fontFamily: fontFamily(style.captionFont),
-            fontSize: 28 * u,
+            fontSize: 30 * u,
             fontWeight: 600,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             lineHeight: 1,
-            padding: `${14 * u}px ${28 * u}px`,
+            padding: `${15 * u}px ${32 * u}px`,
             whiteSpace: 'nowrap',
           })}
         </div>
