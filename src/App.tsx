@@ -21,8 +21,23 @@ const Logo: React.FC = () => (
   </button>
 );
 
+const ReviewOnly: React.FC = () => (
+  <div className="min-h-full">
+    <header className="border-b border-line bg-bg">
+      <div className="mx-auto flex h-16 max-w-[1240px] items-center px-4 md:px-8">
+        <Logo />
+      </div>
+    </header>
+    <main>
+      <ReviewPage />
+    </main>
+  </div>
+);
+
 export default function App() {
   const route = useRoute();
+  // Inside a private Claude artifact the app is only the review window.
+  if (import.meta.env.VITE_ARTIFACT === '1') return <ReviewOnly />;
   const setStep = useStudio((s) => s.setStep);
   const hasVideo = useStudio((s) => !!s.project.video);
 

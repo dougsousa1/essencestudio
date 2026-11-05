@@ -8,6 +8,11 @@ import { CutPanel } from '../panels/CutPanel';
 import { EffectsPanel } from '../panels/EffectsPanel';
 import { hashParam } from '../router';
 import { useProjectSync } from '../review/useProjectSync';
+import { inArtifact, useArtifactSync } from '../review/useArtifactSync';
+
+// Chosen once per page load: local plugin server, or private Claude artifact.
+const ARTIFACT = inArtifact();
+const useSync = ARTIFACT ? (_dir: string | null) => useArtifactSync() : useProjectSync;
 import { Button, Card, Eyebrow, Section, TextArea, fmtTime } from '../kit';
 
 type Stage = 'presets' | 'storyboard' | 'rascunho';
@@ -46,13 +51,13 @@ const PlanSummary: React.FC = () => {
 
 export const ReviewPage: React.FC = () => {
   const dir = hashParam('projeto');
-  const sync = useProjectSync(dir);
+  const sync = useSync(dir);
   const project = useStudio((s) => s.project);
   const [stage, setStage] = useState<Stage>('presets');
   const [tab, setTab] = useState<'cortes' | 'efeitos'>('cortes');
   const [mudancas, setMudancas] = useState('');
 
-  if (!dir) {
+  if (!dir && !ARTIFACT) {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <h1 className="font-display text-2xl font-bold">Janela de revisão</h1>
