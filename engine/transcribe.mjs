@@ -28,6 +28,13 @@ const words = [];
 for (const c of captions) {
   const text = c.text.trim();
   if (!text) continue;
+  // Whisper splits words into pieces; a piece without a leading space continues the previous word.
+  if (!/^\s/.test(c.text) && words.length) {
+    const last = words[words.length - 1];
+    last.text += text;
+    last.end = c.endMs / 1000;
+    continue;
+  }
   // Punctuation-only tokens stick to the previous word.
   if (/^[.,!?;:…]+$/.test(text) && words.length) {
     words[words.length - 1].text += text;
