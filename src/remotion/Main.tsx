@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
-import { AbsoluteFill, Sequence, staticFile, useVideoConfig } from 'remotion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AbsoluteFill, Sequence, continueRender, delayRender, staticFile, useVideoConfig } from 'remotion';
+import { ensureFont } from '../core/fonts';
 import { Audio } from '@remotion/media';
 import { buildTimeline, FPS } from '../core/timeline';
 import type { LookId, LookProps, Project, SfxId } from '../core/types';
@@ -23,8 +24,23 @@ export const sfxUrl = (id: SfxId, project?: Project) => (project?.assetBase === 
 export type MainProps = { project: Project };
 
 /** Root composition: cut video + look + sound effects. Used by Player and export. */
+/** Wait for the style fonts before a frame is captured (local renders and MP4 export). */
+const useStyleFonts = (fonts: string[]) => {
+  const key = fonts.join('|');
+  const [handle] = useState(() => delayRender(`Carregando fontes ${key}`));
+  useEffect(() => {
+    let done = false;
+    Promise.all(fonts.map((f) => ensureFont(f))).finally(() => {
+      if (!done) continueRender(handle);
+      done = true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+};
+
 export const Main: React.FC<MainProps> = ({ project }) => {
   const { width, height } = useVideoConfig();
+  useStyleFonts([project.style.titleFont, project.style.captionFont, project.style.accentFont, 'Caveat']);
   const timeline = useMemo(() => buildTimeline(project), [project]);
   const Look = LOOK_COMPONENTS[project.look] ?? SoftLook;
 

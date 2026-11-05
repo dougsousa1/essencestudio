@@ -158,7 +158,8 @@ export const Captions: React.FC<{
       fontWeight: 700,
       color: s.colors.text,
       textTransform: s.uppercase ? 'uppercase' : 'none',
-      textShadow: shadow ? `0 ${2 * scale}px ${12 * scale}px rgba(0,0,0,0.55)` : undefined,
+      // Two layers: a tight dark edge for light backgrounds and a soft glow.
+      textShadow: shadow ? `0 ${1.5 * scale}px ${3 * scale}px rgba(0,0,0,0.65), 0 0 ${16 * scale}px rgba(0,0,0,0.45)` : undefined,
     };
     if (s.captionMode === 'karaoke' && active) base.color = s.colors.accent;
     if (isEm) {

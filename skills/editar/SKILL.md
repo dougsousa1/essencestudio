@@ -21,6 +21,7 @@ node "$R/engine/new.mjs" "<vídeo>" "<pasta de vídeos>/<nome-curto>"
 node "$R/engine/transcribe.mjs" "$P" pt
 ```
 Leia `$P/transcript.md` (cada linha: `[id tempo] palavra`).
+Olhe 2 ou 3 quadros do vídeo (`ffmpeg -ss <t> -i <vídeo> -frames:v 1 quadro.jpg`). Fundo claro (parede branca, dia claro): use uma cor de destaque escura e evite texto colorido claro sobre o vídeo; fundo escuro: destaque claro.
 Copie para `$P/project.json` o que a marca define: `look`, `style` (cores, fontes, legendas) e o ritmo (`cut.minSilence`: 0.45 natural, 0.25 rápido).
 
 ## 2. Abrir a janela de revisão
