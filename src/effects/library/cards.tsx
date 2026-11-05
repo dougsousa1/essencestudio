@@ -154,7 +154,7 @@ type PhoneProps = { handle: string; stats: string; side: string };
 const STAT_LABELS = ['posts', 'seguidores', 'seguindo'];
 
 const PhoneMockup: React.FC<EffectRenderProps<PhoneProps>> = ({ props, frame, fps, durationInFrames, width, height, style, VideoCopy }) => {
-  const phoneW = Math.min(width * 0.37, (height * 0.43) / 2.05);
+  const phoneW = Math.min(width * 0.37, (height * 0.64) / 2.05);
   const phoneH = phoneW * 2.05;
   const u = phoneW / 390;
   const right = props.side !== 'left';
@@ -684,7 +684,8 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
 
   const side = width * 0.08;
   const maxW = Math.min(width * 0.68, 740 * u);
-  const font = 40 * u;
+  const font = 42 * u;
+  const bubbleShadow = `drop-shadow(0 ${6 * u}px ${14 * u}px rgba(0,0,0,0.25))`;
   const lastMe = sched.reduce((acc, m, i) => (m.me && t >= m.at ? i : acc), -1);
   const posTop = props.position === 'bottom' ? undefined : height * (props.position === 'middle' ? 0.36 : 0.12);
   const posBottom = props.position === 'bottom' ? height * 0.3 : undefined;
@@ -714,12 +715,12 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
           const color = m.me ? meText : '#141316';
           // Older messages step back a little (focus shift).
           const newer = sched.filter((o, j) => j > i && t >= o.at).length;
-          const dim = 1 - Math.min(0.25, newer * 0.1);
+          const dim = 1 - Math.min(0.2, newer * 0.08);
           if (typingOn) {
             const tp = springAt(frame, fps, m.typingFrom, 14, 200);
             return (
-              <div key={i} style={{ alignSelf: 'flex-start', position: 'relative', marginLeft: 12 * u, transform: `scale(${0.6 + 0.4 * tp})`, transformOrigin: '0% 100%', opacity: clamp01(tp * 1.5) }}>
-                <div style={{ display: 'flex', gap: 9 * u, padding: `${24 * u}px ${30 * u}px`, borderRadius: 40 * u, backgroundColor: themBg, boxShadow: `0 ${8 * u}px ${24 * u}px rgba(0,0,0,0.22)` }}>
+              <div key={i} style={{ alignSelf: 'flex-start', position: 'relative', marginLeft: 12 * u, transform: `scale(${0.6 + 0.4 * tp})`, transformOrigin: '0% 100%', opacity: clamp01(tp * 1.5), filter: bubbleShadow }}>
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 9 * u, padding: `${24 * u}px ${30 * u}px`, borderRadius: 40 * u, backgroundColor: themBg }}>
                   {[0, 1, 2].map((k) => {
                     const w = Math.sin((t - m.typingFrom) * 9 - k * 0.9);
                     return <div key={k} style={{ width: 14 * u, height: 14 * u, borderRadius: '50%', backgroundColor: '#8E8C93', opacity: 0.45 + 0.4 * Math.max(0, w), transform: `translateY(${-Math.max(0, w) * 5 * u}px)` }} />;
@@ -740,7 +741,8 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
                 maxWidth: maxW,
                 marginLeft: m.me ? 0 : 12 * u,
                 marginRight: m.me ? 12 * u : 0,
-                opacity: p * dim,
+                opacity: p,
+                filter: `${bubbleShadow} brightness(${dim})`,
                 transform: `translateY(${(1 - p) * 32 * u}px) scale(${0.85 + 0.15 * pop})`,
                 transformOrigin: m.me ? '100% 100%' : '0% 100%',
               }}
@@ -755,7 +757,6 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
                   lineHeight: 1.25,
                   padding: `${17 * u}px ${30 * u}px`,
                   borderRadius: 38 * u,
-                  boxShadow: `0 ${8 * u}px ${24 * u}px rgba(0,0,0,0.22)`,
                 }}
               >
                 {m.text}
@@ -781,7 +782,7 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
 type FrameProps = { handle: string; likes: string; comments: string; breakTop: boolean };
 
 const frameRect = (width: number, height: number) => {
-  const fw = Math.min(width * 0.82, height * 0.6 * 0.8);
+  const fw = Math.min(width * 0.82, height * 0.78 * 0.8);
   const fh = fw * 1.25;
   const left = (width - fw) / 2;
   const top = height * 0.5 - fh / 2 + height * 0.01;
@@ -823,21 +824,22 @@ const FrameBreak: React.FC<EffectRenderProps<FrameProps>> = ({ props, frame, fps
   const likesNum = /^(\d{1,3}(\.\d{3})+|\d+)$/.test(likesRaw) ? Number(likesRaw.replace(/\./g, '')) : null;
   const likesText = likesNum === null ? likesRaw : fmtThousands(likesNum + (liked ? 1 : 0));
   const dim = 0.3 * draw * vis;
+  const sideDim = `linear-gradient(180deg, rgba(0,0,0,0) 0px, rgba(0,0,0,${dim}) ${r * 3}px, rgba(0,0,0,${dim}) 100%)`;
   const shadow = `drop-shadow(0 ${2 * u}px ${6 * u}px rgba(0,0,0,0.45))`;
   const handle = String(props.handle || '@seuperfil');
 
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>
       {/* Soft dim outside the frame (left, right, bottom; fades out towards the head at the top). */}
-      <div style={{ position: 'absolute', left: 0, top: 0, width: left, height, backgroundColor: `rgba(0,0,0,${dim})` }} />
-      <div style={{ position: 'absolute', left: right, top: 0, right: 0, height, backgroundColor: `rgba(0,0,0,${dim})` }} />
+      <div style={{ position: 'absolute', left: 0, top, width: left, bottom: 0, backgroundImage: sideDim }} />
+      <div style={{ position: 'absolute', left: right, top, right: 0, bottom: 0, backgroundImage: sideDim }} />
       <div style={{ position: 'absolute', left, top: bottom, width: fw, bottom: 0, backgroundColor: `rgba(0,0,0,${dim})` }} />
-      <div style={{ position: 'absolute', left, top: 0, width: fw, height: top, backgroundImage: `linear-gradient(180deg, rgba(0,0,0,${dim}) 0%, rgba(0,0,0,0) 100%)` }} />
+      <div style={{ position: 'absolute', left: 0, top: 0, width, height: top, backgroundImage: `linear-gradient(180deg, rgba(0,0,0,${dim * 0.8}) 0%, rgba(0,0,0,0) 100%)` }} />
       {/* Legibility bands inside the frame */}
       <div style={{ position: 'absolute', left, top: bottom - 170 * u, width: fw, height: 170 * u, borderRadius: `0 0 ${r}px ${r}px`, backgroundImage: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 100%)', opacity: chrome * vis }} />
       {/* The frame */}
       <svg width={width} height={height} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', opacity: vis, filter: shadow }}>
-        <path d={d} fill="none" stroke="rgba(255,255,255,0.92)" strokeWidth={4 * u} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - draw} />
+        <path d={d} fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={3.6 * u} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - draw} />
       </svg>
       {/* Header: avatar + handle */}
       <div

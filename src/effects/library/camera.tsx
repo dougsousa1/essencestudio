@@ -144,7 +144,7 @@ const DigitalOverlay: React.FC<FX<DigitalProps>> = ({ props, frame, fps, duratio
 // ===========================================================================
 // 3. Vertigo (ref2 #10)
 // Dolly-zoom echo: larger ghost copies of the footage grow behind while the
-// main video turns semi-transparent and counter-zooms — the person appears twice.
+// main video turns semi-transparent — the person appears twice.
 // ===========================================================================
 
 type VertigoProps = { intensity: number; echoes: number };
@@ -160,16 +160,16 @@ const VertigoBackdrop: React.FC<FX<VertigoProps>> = ({ props, frame, durationInF
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
       {Array.from({ length: n }, (_, j) => {
         const k = (n - j) / n; // biggest copy at the bottom of the stack
-        const target = 0.4 * I * k;
-        const sc = 1 + target * (0.3 + 0.7 * grow);
+        const target = 0.42 * I * k;
+        const sc = 1 + target * (0.45 + 0.55 * grow);
         return (
           <VideoCopy
             key={j}
             style={{
               transform: `translate(${-2.2 * I * k}%, ${-1.5 * I * k}%) scale(${sc})`,
               transformOrigin: '50% 82%',
-              opacity: j === 0 ? 1 : 0.55,
-              filter: `brightness(1.06) saturate(0.82) blur(${(1.4 * s * k).toFixed(2)}px)`,
+              opacity: j === 0 ? 1 : 0.5,
+              filter: `brightness(1.05) saturate(0.85) blur(${(0.6 * s * k).toFixed(2)}px)`,
             }}
           />
         );
@@ -183,8 +183,10 @@ const vertigoVideo = ({ props, frame, fps, durationInFrames }: FX<VertigoProps>)
   const env = vertigoEnv(frame, fps, durationInFrames);
   const grow = vertigoGrow(frame, durationInFrames);
   return {
-    opacity: 1 - clamp(0.4 * I, 0.12, 0.6) * env,
-    transform: `scale(${1 - 0.07 * I * grow * env})`,
+    opacity: 1 - clamp(0.42 * I, 0.12, 0.6) * env,
+    // Gentle counter-move: the subject stays put while the echo rushes forward
+    // (never below 1, so the translucent video never shows its edges).
+    transform: `scale(${1 + 0.03 * I * grow * env})`,
     transformOrigin: '50% 45%',
   };
 };
@@ -309,8 +311,9 @@ const ZoomThroughOverlay: React.FC<FX<ZoomThroughProps>> = ({ props, frame, fps,
 
 // ===========================================================================
 // 6. Wipe — "Cortina"
-// Two-tone block sweeping across the frame (power4.inOut). A thin lead band
-// enters first and trails on the way out; an optional label rides the block.
+// Two-tone block sweeping across the frame in one power4.inOut pass, with a
+// thin band of a second color leading in and trailing out. With a label, the
+// block stops to cover the frame while the text rides on it.
 // ===========================================================================
 
 type WipeProps = { label: string; direction: string; colorMode: string; size: number };
@@ -322,11 +325,15 @@ const Wipe: React.FC<FX<WipeProps>> = ({ props, frame, fps, durationInFrames, wi
   const sign = props.direction === 'left' ? -1 : 1;
   const main = colorFromMode(props.colorMode, style);
   const lead = props.colorMode === 'accent' ? style.colors.text : style.colors.accent;
-  const half = Math.min(0.42 * fps, durationInFrames * 0.42);
-  const lag = Math.min(0.07 * fps, durationInFrames * 0.08);
+  const label = props.label.trim();
+  const lag = Math.min(0.035 * fps, durationInFrames * 0.05);
+  const span = durationInFrames - 1 - 2 * lag; // travel time of one layer
+  const half = Math.min(0.45 * fps, span * 0.42);
   // -1 = off before, 0 = covering, +1 = off after.
-  const pos = (enterDelay: number, exitEnd: number) =>
-    -1 + ramp(frame, enterDelay, enterDelay + half, P4) + ramp(frame, exitEnd - half, exitEnd, P4);
+  const pos = (delay: number) =>
+    label
+      ? -1 + ramp(frame, delay, delay + half, P4) + ramp(frame, delay + span - half, delay + span, P4)
+      : -1 + 2 * ramp(frame, delay, delay + span, P4);
   const tan = Math.tan((WIPE_SKEW * Math.PI) / 180);
   // Block size along the travel axis, with room for the slanted edges.
   const along = vertical ? height + width * tan + 0.04 * height : width + height * tan + 0.04 * width;
@@ -341,15 +348,14 @@ const Wipe: React.FC<FX<WipeProps>> = ({ props, frame, fps, durationInFrames, wi
     zIndex: z,
     transform: vertical ? `translateY(${-p * travel}px) skewY(${-WIPE_SKEW}deg)` : `translateX(${sign * p * travel}px) skewX(${-sign * WIPE_SKEW}deg)`,
   });
-  const pLead = pos(0, durationInFrames - 1);
-  const pMain = pos(lag, durationInFrames - 1 - lag);
-  const label = props.label.trim();
+  const pMain = pos(lag);
   const fam = fontFamily(style.titleFont);
   const size = label ? fitSize(label, fam, 700, width * 0.84, props.size * ts) : 0;
   const ink = inkOn(main);
   return (
     <AbsoluteFill style={{ pointerEvents: 'none', overflow: 'hidden' }}>
-      <div style={blockStyle(pLead, lead, 1)} />
+      <div style={blockStyle(pos(0), lead, 1)} />
+      <div style={blockStyle(pos(2 * lag), lead, 1)} />
       <div style={{ ...blockStyle(pMain, main, 2), boxShadow: `0 0 ${40 * ts}px rgba(0,0,0,0.25)` }} />
       {label ? (
         <AbsoluteFill
@@ -361,7 +367,7 @@ const Wipe: React.FC<FX<WipeProps>> = ({ props, frame, fps, durationInFrames, wi
           }}
         >
           <div style={{ fontFamily: fam, fontWeight: 700, fontSize: size, lineHeight: 1, color: ink, whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>{label}</div>
-          <div style={{ marginTop: 18 * ts, width: 90 * ts, height: 5 * ts, borderRadius: 3 * ts, backgroundColor: ink, opacity: 0.55 }} />
+          <div style={{ marginTop: 0.32 * size, width: 90 * ts, height: 5 * ts, borderRadius: 3 * ts, backgroundColor: ink, opacity: 0.55 }} />
         </AbsoluteFill>
       ) : null}
     </AbsoluteFill>
@@ -482,7 +488,7 @@ const CarouselBackdrop: React.FC<FX<CarouselProps>> = ({ props, frame, fps, dura
               key={slot}
               style={{
                 position: 'absolute',
-                left: `${50 + 40 * Math.sin(rad)}%`,
+                left: `${50 + 35 * Math.sin(rad)}%`,
                 top: `${50 - 4 * (1 - cz)}%`,
                 width: `${CAR_K * 100}%`,
                 height: `${CAR_K * 100}%`,
@@ -540,7 +546,7 @@ const CarouselBackdrop: React.FC<FX<CarouselProps>> = ({ props, frame, fps, dura
                       style={{
                         marginTop: 12 * s,
                         fontFamily: fam,
-                        fontSize: 54 * s,
+                        fontSize: 50 * s,
                         fontWeight: 700,
                         lineHeight: 1.02,
                         color: '#FFFFFF',
@@ -587,7 +593,7 @@ const GlassType: React.FC<FX<GlassProps>> = ({ props, frame, fps, durationInFram
   const fam = fontFamily(fontKey(props.font, style));
   const weight = 800;
   const tracking = 0.02;
-  const size = fitSize(text, fam, weight, width * 0.86, Math.min(props.size * s, height * 0.24), tracking);
+  const size = fitSize(text, fam, weight, width * 0.92, Math.min(props.size * s, height * 0.24), tracking);
   const enter = ramp(frame, 0, 0.8 * fps, EO);
   const out = fadeOut(frame, durationInFrames, fps, 0.35);
   const drift = ramp(frame, 0, durationInFrames, Easing.inOut(Easing.sin));
@@ -603,7 +609,8 @@ const GlassType: React.FC<FX<GlassProps>> = ({ props, frame, fps, durationInFram
     letterSpacing: `${tracking}em`,
     whiteSpace: 'nowrap',
   };
-  const stroke = `${Math.max(1.5, 2.4 * s)}px rgba(255,255,255,0.9)`;
+  // Thin, soft rim: variable fonts have overlapping contours that a heavy stroke would reveal.
+  const stroke = `${Math.max(1, 1.3 * s)}px rgba(255,255,255,0.6)`;
   const tw = (measureWidth(text, fam, weight, tracking) / 100) * size;
   const bandW = Math.max(tw * 0.18, 60 * s);
   const bandLeft = -bandW + sheen * (tw + bandW);
@@ -626,9 +633,9 @@ const GlassType: React.FC<FX<GlassProps>> = ({ props, frame, fps, durationInFram
           <div
             style={{
               ...textStyle,
-              color: 'rgba(255,255,255,0.3)',
+              color: 'rgba(255,255,255,0.42)',
               WebkitTextStroke: stroke,
-              textShadow: `0 0 ${28 * s}px rgba(255,255,255,0.45), 0 ${8 * s}px ${36 * s}px rgba(0,0,0,0.14)`,
+              textShadow: `0 0 ${30 * s}px rgba(255,255,255,0.5), 0 ${8 * s}px ${36 * s}px rgba(0,0,0,0.12)`,
             }}
           >
             {text}
@@ -667,12 +674,12 @@ const CoverLine: React.FC<{ text: string; index: number; p: number; ts: number; 
     <div style={{ opacity: clamp(p * 1.3, 0, 1), transform: `translateX(${(1 - p) * -50 * ts}px)`, marginTop: index === 0 ? 0 : 30 * ts }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 * ts, marginBottom: 8 * ts }}>
         <div style={{ width: 44 * ts * p, height: 4 * ts, backgroundColor: style.colors.accent, borderRadius: 2 * ts }} />
-        <div style={{ fontFamily: fontFamily(style.captionFont), fontSize: 20 * ts, fontWeight: 700, letterSpacing: '0.3em', color: style.colors.accent }}>0{index + 1}</div>
+        <div style={{ fontFamily: fontFamily(style.captionFont), fontSize: 22 * ts, fontWeight: 700, letterSpacing: '0.3em', color: style.colors.accent, textShadow: `0 ${1 * ts}px ${8 * ts}px rgba(0,0,0,0.4)` }}>0{index + 1}</div>
       </div>
       <div
         style={{
           fontFamily: fontFamily(style.titleFont),
-          fontSize: 50 * ts,
+          fontSize: 60 * ts,
           fontWeight: 600,
           lineHeight: 1.04,
           color,
@@ -755,7 +762,7 @@ const CoverStory: React.FC<FX<CoverProps>> = ({ props, frame, fps, durationInFra
             <div
               style={{
                 fontFamily: fontFamily(style.captionFont),
-                fontSize: 22 * ts,
+                fontSize: 25 * ts,
                 fontWeight: 600,
                 letterSpacing: '0.38em',
                 color,
@@ -769,7 +776,7 @@ const CoverStory: React.FC<FX<CoverProps>> = ({ props, frame, fps, durationInFra
           </div>
         ) : null}
       </div>
-      <div style={{ position: 'absolute', left: width * 0.08, width: width * 0.5, top: height * 0.5, opacity: out }}>
+      <div style={{ position: 'absolute', left: width * 0.08, width: width * 0.6, top: height * 0.48, opacity: out }}>
         {[props.line1, props.line2].map((t, i) => (
           <CoverLine key={i} text={t} index={i} ts={ts} style={style} color={color} p={ramp(frame, (issueDelay + 0.2 + i * 0.18) * fps, (issueDelay + 0.75 + i * 0.18) * fps, EO)} />
         ))}
@@ -836,7 +843,7 @@ export const CAMERA_EFFECTS: EffectDef<any>[] = [
     sfx: 'whoosh',
     fields: [
       { key: 'intensity', label: 'Intensidade', type: 'number', default: 1, min: 0.3, max: 1.5, step: 0.1 },
-      { key: 'echoes', label: 'Cópias fantasma', type: 'number', default: 2, min: 1, max: 3, step: 1 },
+      { key: 'echoes', label: 'Cópias fantasma', type: 'number', default: 1, min: 1, max: 3, step: 1 },
     ],
     Backdrop: VertigoBackdrop,
     videoStyle: vertigoVideo,
@@ -879,9 +886,9 @@ export const CAMERA_EFFECTS: EffectDef<any>[] = [
     name: 'Cortina',
     term: 'wipe',
     category: 'transitions',
-    description: 'Um bloco de cor atravessa a tela e limpa a cena (power4.inOut). Pode levar um texto, como "Capítulo 2".',
+    description: 'Um bloco de cor atravessa a tela e limpa a cena (power4.inOut). Com texto, como "Capítulo 2", a cortina para no meio — aumente a duração.',
     source: 'biblioteca',
-    defaultDuration: 1,
+    defaultDuration: 0.8,
     sfx: 'swish',
     fields: [
       { key: 'label', label: 'Texto na cortina (opcional)', type: 'text', default: '', placeholder: 'ex.: Capítulo 2' },
@@ -908,7 +915,7 @@ export const CAMERA_EFFECTS: EffectDef<any>[] = [
           { value: 'text', label: 'Cor do texto' },
         ],
       },
-      { key: 'size', label: 'Tamanho do texto', type: 'number', default: 120, min: 50, max: 220, step: 2 },
+      { key: 'size', label: 'Tamanho do texto', type: 'number', default: 140, min: 50, max: 240, step: 2 },
     ],
     Overlay: Wipe,
   }),
@@ -957,7 +964,7 @@ export const CAMERA_EFFECTS: EffectDef<any>[] = [
     fields: [
       { key: 'text', label: 'Texto', type: 'text', default: '', placeholder: 'Vazio = a palavra falada' },
       { key: 'size', label: 'Tamanho máximo', type: 'number', default: 300, min: 100, max: 420, step: 5 },
-      { key: 'font', label: 'Fonte', type: 'select', default: 'title', options: FONT_OPTIONS },
+      { key: 'font', label: 'Fonte', type: 'select', default: 'caption', options: FONT_OPTIONS },
       {
         key: 'position',
         label: 'Posição',
@@ -985,7 +992,7 @@ export const CAMERA_EFFECTS: EffectDef<any>[] = [
       { key: 'masthead', label: 'Nome da revista', type: 'text', default: 'ÍCONE' },
       { key: 'issue', label: 'Linha da edição', type: 'text', default: 'Edição 01 · 2026' },
       { key: 'line1', label: 'Chamada 1', type: 'text', default: 'Exclusivo: como eu crio em 5 minutos' },
-      { key: 'line2', label: 'Chamada 2', type: 'text', default: 'Os 3 segredos de um bom vídeo' },
+      { key: 'line2', label: 'Chamada 2', type: 'text', default: 'Segredos de quem grava sem roteiro' },
       {
         key: 'colorMode',
         label: 'Cor do título',

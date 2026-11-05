@@ -15,6 +15,14 @@ import { fadeOut, pop } from '../util';
 
 const CLAMP = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
+/**
+ * The web renderer only applies a plain `filter` to the element's own paint, not to its children.
+ * A chain that contains a drop-shadow is precomposited as a group (whole subtree), so this no-op
+ * shadow makes blur/saturate on wrappers (video copies, text blocks) show up in the MP4 too.
+ */
+const GROUP = ' drop-shadow(0 0 0 rgba(0,0,0,0))';
+const blurF = (px: number, extra = '') => `blur(${px.toFixed(2)}px)${extra ? ` ${extra}` : ''}${GROUP}`;
+
 const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
 const clamp01 = (x: number) => clamp(x, 0, 1);
 
@@ -87,12 +95,45 @@ const lumOf = (rgb: RGB) => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 
-/** Darkens a color (keeping its hue) until its luminance is <= target. Good for white text on top. */
+const toHsl = ([r0, g0, b0]: RGB): [number, number, number] => {
+  const r = r0 / 255;
+  const g = g0 / 255;
+  const b = b0 / 255;
+  const mx = Math.max(r, g, b);
+  const mn = Math.min(r, g, b);
+  const l = (mx + mn) / 2;
+  if (mx === mn) return [0, 0, l];
+  const d = mx - mn;
+  const s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+  const h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h / 6, s, l];
+};
+
+const fromHsl = ([h, s, l]: [number, number, number]): RGB => {
+  if (s === 0) return [l * 255, l * 255, l * 255];
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const ch = (t0: number) => {
+    let t = t0;
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  return [ch(h + 1 / 3) * 255, ch(h) * 255, ch(h - 1 / 3) * 255];
+};
+
+/** Darkens a color in HSL (keeping hue and saturation) until its luminance is <= target. Good for white text on top. */
 const deepen = (c: string, target = 0.22) => {
-  const base = toRgb(c);
-  let rgb: RGB = base;
-  for (let t = 0; t <= 0.85 && lumOf(rgb) > target; t += 0.04) {
-    rgb = [base[0] * (1 - t), base[1] * (1 - t), base[2] * (1 - t)];
+  const [h, s0, l0] = toHsl(toRgb(c));
+  const s = Math.min(1, s0 * 1.1);
+  let l = l0;
+  let rgb = fromHsl([h, s, l]);
+  while (lumOf(rgb) > target && l > 0.08) {
+    l -= 0.01;
+    rgb = fromHsl([h, s, l]);
   }
   return rgbStr(rgb);
 };
@@ -192,7 +233,7 @@ const Odometer: React.FC<OdometerProps> = ({ value, prev, max, decimals, size, f
             top: 0,
             width: cw,
             transform: `translateY(${-pos * h}px)`,
-            filter: blur > 0.5 ? `blur(${blur.toFixed(2)}px)` : undefined,
+            filter: blur > 0.5 ? blurF(blur) : undefined,
           }}
         >
           {DIGITS.map((d, i) => (
@@ -246,7 +287,7 @@ const Frost: React.FC<{ VideoCopy: EffectRenderProps['VideoCopy']; x: number; y:
   tint,
 }) => (
   <>
-    <div style={{ position: 'absolute', left: -x, top: -y, width, height, filter: `blur(${blur}px) saturate(1.15)` }}>
+    <div style={{ position: 'absolute', left: -x, top: -y, width, height, filter: blurF(blur, 'saturate(1.15)') }}>
       <VideoCopy />
     </div>
     <div style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, backgroundColor: tint }} />
@@ -375,7 +416,7 @@ const CountUp: React.FC<EffectRenderProps<CountUpProps>> = ({ props, frame, fps,
           alignItems: 'center',
           opacity: clamp01(enter * 1.5),
           transform: `translateY(${(1 - enter) * 50 * s}px) scale(${0.95 + 0.05 * out})`,
-          filter: out < 1 ? `blur(${((1 - out) * 10 * s).toFixed(2)}px)` : undefined,
+          filter: out < 1 ? blurF((1 - out) * 10 * s) : undefined,
         }}
       >
         {props.label ? (
@@ -458,7 +499,7 @@ const GlassGraph: React.FC<EffectRenderProps<GlassGraphProps>> = ({ props, frame
   const vals = numList(props.values, [12, 18, 21, 34, 47, 58, 63]);
   const vmin = Math.min(...vals);
   const vmax = Math.max(...vals);
-  const cTop = ch * 0.4;
+  const cTop = ch * 0.43;
   const cBottom = ch - pad - 58 * u;
   const cLeft = pad + 4 * u;
   const cRight = cw - pad - 14 * u;
@@ -525,7 +566,7 @@ const GlassGraph: React.FC<EffectRenderProps<GlassGraphProps>> = ({ props, frame
           style={{
             position: 'absolute',
             right: pad - 6 * u,
-            top: pad + 26 * u,
+            top: pad + 44 * u,
             opacity: textIn,
             transform: `scale(${1 + 0.06 * land})`,
             transformOrigin: '100% 50%',
@@ -592,7 +633,7 @@ const GlassGraph: React.FC<EffectRenderProps<GlassGraphProps>> = ({ props, frame
 const glassGraphVideoStyle = ({ props, frame, fps, durationInFrames, width, height }: EffectRenderProps<GlassGraphProps>): React.CSSProperties => {
   if (props.blurBg === false) return {};
   const k = ramp(frame, 0, 0.45 * fps) * fadeOut(frame, durationInFrames, fps, 0.35);
-  return { filter: `blur(${(14 * fit(width, height) * k).toFixed(2)}px) brightness(${(1 - 0.18 * k).toFixed(3)})` };
+  return k > 0 ? { filter: blurF(14 * fit(width, height) * k, `brightness(${(1 - 0.18 * k).toFixed(3)})`) } : {};
 };
 
 // ---------------------------------------------------------------------------
@@ -614,8 +655,8 @@ const ChartGrow: React.FC<EffectRenderProps<ChartGrowProps>> = ({ props, frame, 
   const n = vals.length;
   const vmax = Math.max(...vals, 1e-6);
   const top = height * 0.12;
-  const barTop = top + 58 * s;
-  const base = barTop + 300 * s;
+  const barTop = top + 64 * s;
+  const base = barTop + 390 * s;
   const H = base - barTop;
   const gapRatio = 0.42;
   let barW = Math.min(width * 0.84, 940 * s) / (n + (n - 1) * gapRatio);
@@ -665,7 +706,7 @@ const ChartGrow: React.FC<EffectRenderProps<ChartGrowProps>> = ({ props, frame, 
                 position: 'absolute',
                 left: bx - 40 * s,
                 width: barW + 80 * s,
-                top: base - h - 52 * s,
+                top: base - h - 58 * s,
                 display: 'flex',
                 justifyContent: 'center',
                 opacity: clamp01(lp * 1.4),
@@ -676,7 +717,7 @@ const ChartGrow: React.FC<EffectRenderProps<ChartGrowProps>> = ({ props, frame, 
               <span
                 style={{
                   fontFamily: f.caption,
-                  fontSize: (isHi ? 30 : 27) * s,
+                  fontSize: (isHi ? 34 : 30) * s,
                   fontWeight: 700,
                   color: isHi ? ink : '#FFFFFF',
                   backgroundColor: isHi ? accent : 'rgba(0,0,0,0)',
@@ -700,7 +741,7 @@ const ChartGrow: React.FC<EffectRenderProps<ChartGrowProps>> = ({ props, frame, 
                   top: base + 14 * s,
                   textAlign: 'center',
                   fontFamily: f.caption,
-                  fontSize: 22 * s,
+                  fontSize: 25 * s,
                   fontWeight: 600,
                   letterSpacing: '0.12em',
                   color: 'rgba(255,255,255,0.88)',
@@ -732,12 +773,12 @@ const ChartGrow: React.FC<EffectRenderProps<ChartGrowProps>> = ({ props, frame, 
           style={{
             position: 'absolute',
             left: left - 4 * s,
-            top: base + 62 * s,
+            top: base + 70 * s,
             display: 'flex',
             alignItems: 'center',
             gap: 10 * s,
-            padding: `${8 * s}px ${18 * s}px`,
-            borderRadius: 12 * s,
+            padding: `${10 * s}px ${22 * s}px`,
+            borderRadius: 14 * s,
             backgroundColor: accent,
             boxShadow: `0 ${10 * s}px ${26 * s}px rgba(0,0,0,0.3)`,
             opacity: clamp01(tagP * 1.5),
@@ -745,8 +786,8 @@ const ChartGrow: React.FC<EffectRenderProps<ChartGrowProps>> = ({ props, frame, 
             transformOrigin: '0% 50%',
           }}
         >
-          <span style={{ fontFamily: f.caption, fontSize: 28 * s, fontWeight: 800, letterSpacing: '0.06em', color: ink, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{props.tag}</span>
-          <TrendIcon size={30 * s} color={ink} stroke={3} />
+          <span style={{ fontFamily: f.caption, fontSize: 34 * s, fontWeight: 800, letterSpacing: '0.06em', color: ink, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{props.tag}</span>
+          <TrendIcon size={36 * s} color={ink} stroke={3} />
         </div>
       ) : null}
     </AbsoluteFill>
@@ -789,13 +830,14 @@ const SlotCard: React.FC<{
   for (let r = 0; r < rounds; r++) strip.push(...words);
   const finalIdx = strip.length - 1;
   strip.push(words[0]);
-  const b = 4 * s;
-  const labelH = 38 * s;
+  const b = 5 * s;
+  const labelH = 40 * s;
   const ih = height - 2 * b - labelH - 8 * s;
   const x = reelPos(frame, start, landF, finalIdx);
   const v = Math.abs(x - reelPos(frame - 1, start, landF, finalIdx));
   const blur = Math.min(6 * s, v * ih * 0.1);
   const border = deepen(accent, 0.3);
+  const labelColor = deepen(accent, 0.16);
   void fps;
   return (
     <div
@@ -818,10 +860,10 @@ const SlotCard: React.FC<{
           left: 22 * s,
           top: 12 * s,
           fontFamily: labelFont,
-          fontSize: 18 * s,
+          fontSize: 20 * s,
           fontWeight: 700,
           letterSpacing: '0.2em',
-          color: border,
+          color: labelColor,
           textTransform: 'uppercase',
           whiteSpace: 'nowrap',
         }}
@@ -829,7 +871,7 @@ const SlotCard: React.FC<{
         {label}
       </div>
       <div style={{ position: 'absolute', left: 0, right: 0, top: labelH, height: ih, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', left: 0, right: 0, top: 0, transform: `translateY(${-x * ih}px)`, filter: blur > 0.4 ? `blur(${blur.toFixed(2)}px)` : undefined }}>
+        <div style={{ position: 'absolute', left: 0, right: 0, top: 0, transform: `translateY(${-x * ih}px)`, filter: blur > 0.4 ? blurF(blur) : undefined }}>
           {strip.map((w, i) => (
             <div
               key={i}
@@ -978,7 +1020,7 @@ const MatchCut: React.FC<EffectRenderProps<MatchCutProps>> = ({ props, frame, fp
   const target = Math.ceil((width * 1.35) / (fs * 0.5));
   const lines = buildLines(paragraph, nLines, target, (idx * 5) % 17, centerIdx);
 
-  const chipFs = 96 * s;
+  const chipFs = 108 * s;
   const gapW = chipWord.length * chipFs * 0.46 + 96 * s;
 
   const pageIn = ramp(frame, 0, 0.1 * fps);
@@ -1003,7 +1045,7 @@ const MatchCut: React.FC<EffectRenderProps<MatchCutProps>> = ({ props, frame, fp
               fontStyle: world.italic ? 'italic' : 'normal',
               fontSize: world.lines ? fs * 1.1 : fs,
               color: world.ink,
-              filter: blur > 0.2 ? `blur(${blur.toFixed(2)}px)` : undefined,
+              filter: blur > 0.2 ? blurF(blur) : undefined,
             }}
           >
             {lines.map((ln, i) => {
