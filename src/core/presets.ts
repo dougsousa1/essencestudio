@@ -140,6 +140,7 @@ export const styleForLook = (id: LookId): Style => ({ ...BASE_STYLE, ...lookMeta
 export const initialProject = (): Project => ({
   video: null,
   words: [],
+  effects: [],
   cut: { removeSilences: true, minSilence: 0.45, padding: 0.08 },
   format: '9:16',
   look: 'soft',

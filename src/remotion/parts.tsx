@@ -16,7 +16,7 @@ export const gradeFilter = (g: Style['grade']) => {
 };
 
 /** The source video with cuts applied: one Sequence per kept segment. */
-export const CutVideo: React.FC<{ project: Project; timeline: Timeline; style?: React.CSSProperties }> = ({ project, timeline, style }) => {
+export const CutVideo: React.FC<{ project: Project; timeline: Timeline; style?: React.CSSProperties; muted?: boolean }> = ({ project, timeline, style, muted }) => {
   const video = project.video;
   if (!video) return null;
   return (
@@ -30,6 +30,7 @@ export const CutVideo: React.FC<{ project: Project; timeline: Timeline; style?: 
               src={video.url}
               trimBefore={Math.round(seg.srcStart * FPS)}
               objectFit="cover"
+              muted={muted}
               style={{ width: '100%', height: '100%', filter: gradeFilter(project.style.grade) }}
             />
           </Sequence>

@@ -5,12 +5,14 @@ import { UploadPanel } from './ui/panels/UploadPanel';
 import { CutPanel } from './ui/panels/CutPanel';
 import { LookPanel } from './ui/panels/LookPanel';
 import { SoundPanel } from './ui/panels/SoundPanel';
+import { EffectsPanel } from './ui/panels/EffectsPanel';
 import { ExportPanel } from './ui/panels/ExportPanel';
 
 const STEPS: Array<{ id: StepId; label: string; icon: string; desc: string }> = [
   { id: 'upload', label: 'Vídeo', icon: '↑', desc: 'Envie seu vídeo' },
   { id: 'cut', label: 'Cortar', icon: '✂', desc: 'Pausas e erros saem' },
   { id: 'look', label: 'Estilo', icon: '✦', desc: 'Looks, cores e fontes' },
+  { id: 'effects', label: 'Efeitos', icon: '✺', desc: 'Biblioteca de motion' },
   { id: 'sound', label: 'Som', icon: '♪', desc: 'Sons nas palavras' },
   { id: 'export', label: 'Exportar', icon: '⬇', desc: 'MP4, capa e legenda' },
 ];
@@ -19,6 +21,7 @@ const PANELS: Record<StepId, React.FC> = {
   upload: UploadPanel,
   cut: CutPanel,
   look: LookPanel,
+  effects: EffectsPanel,
   sound: SoundPanel,
   export: ExportPanel,
 };

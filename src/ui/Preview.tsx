@@ -5,6 +5,15 @@ import { buildTimeline, durationInFrames, FORMAT_SIZE, FPS } from '../core/timel
 import { ensureFont } from '../core/fonts';
 import { useStudio } from '../core/store';
 
+let activePlayer: PlayerRef | null = null;
+
+/** Jump the main preview to a time (seconds) and play. */
+export const seekPreview = (seconds: number) => {
+  if (!activePlayer) return;
+  activePlayer.seekTo(Math.max(0, Math.round(seconds * FPS)));
+  activePlayer.play();
+};
+
 /** Live preview: re-renders instantly whenever the project changes. */
 export const Preview: React.FC = () => {
   const project = useStudio((s) => s.project);
@@ -38,7 +47,17 @@ export const Preview: React.FC = () => {
     w = h * ratio;
   }
 
+  const setPlayhead = useStudio((s) => s.setPlayhead);
   useEffect(() => {
+    const p = playerRef.current;
+    if (!p) return;
+    const onFrame = (e: { detail: { frame: number } }) => setPlayhead(e.detail.frame / FPS);
+    p.addEventListener('frameupdate', onFrame);
+    return () => p.removeEventListener('frameupdate', onFrame);
+  }, [project.video, setPlayhead]);
+
+  useEffect(() => {
+    activePlayer = playerRef.current;
     // Handy for automated checks in development.
     if (import.meta.env.DEV) (window as unknown as { __player?: PlayerRef | null }).__player = playerRef.current;
   });

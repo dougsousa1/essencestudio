@@ -161,8 +161,8 @@ export const LookPanel: React.FC = () => {
       </Section>
 
       <div className="p-5">
-        <Button variant="primary" className="w-full" onClick={() => setStep('sound')}>
-          Próximo: som ›
+        <Button variant="primary" className="w-full" onClick={() => setStep('effects')}>
+          Próximo: efeitos ›
         </Button>
       </div>
     </div>

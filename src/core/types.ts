@@ -87,9 +87,23 @@ export type SoundSettings = {
   titleSfx: SfxId | null;
 };
 
+/** A motion-graphics effect placed on the video ("one word = one effect"). */
+export type EffectInstance = {
+  id: string;
+  /** Key in the effects registry. */
+  effectId: string;
+  /** Word that triggers the effect. When null (or the word was cut), `at` is used. */
+  wordId: string | null;
+  /** Start in output seconds, used when there is no anchor word. */
+  at: number;
+  durationInSeconds: number;
+  props: Record<string, unknown>;
+};
+
 export type Project = {
   video: VideoSource | null;
   words: Word[];
+  effects: EffectInstance[];
   cut: CutSettings;
   format: FormatId;
   look: LookId;
