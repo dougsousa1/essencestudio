@@ -1,18 +1,23 @@
 @import "tailwindcss";
 
+/* Light, professional theme: white, grays and one blue. */
 @theme {
-  --color-ink: #0f0d0e;
-  --color-panel: #171416;
-  --color-panel-2: #1f1b1e;
-  --color-line: rgba(255, 240, 245, 0.08);
-  --color-line-strong: rgba(255, 240, 245, 0.16);
-  --color-fg: #f6eff2;
-  --color-muted: #a3979d;
-  --color-rose: #f2a9c0;
-  --color-rose-deep: #d97a9b;
-  --color-cream: #f3ebdd;
+  --color-bg: #ffffff;
+  --color-canvas: #f6f7f9;
+  --color-subtle: #f2f4f7;
+  --color-line: #e4e7ec;
+  --color-line-strong: #d0d5dd;
+  --color-fg: #101828;
+  --color-fg-2: #344054;
+  --color-muted: #667085;
+  --color-brand: #2563eb;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+  --color-brand-soft: #eff4ff;
+  --color-brand-ring: #b2ccff;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
 }
 
 html,
@@ -23,21 +28,28 @@ body,
 
 body {
   margin: 0;
-  background: var(--color-ink);
+  background: var(--color-canvas);
   color: var(--color-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  color-scheme: light;
 }
 
 input[type="range"] {
-  accent-color: var(--color-rose);
+  accent-color: var(--color-brand);
+}
+
+::selection {
+  background: var(--color-brand-soft);
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: #d0d5dd;
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }

@@ -3,6 +3,7 @@ import type { LookId, Project, Style } from './types';
 export type Palette = { id: string; name: string; colors: Style['colors'] };
 
 export const PALETTES: Palette[] = [
+  { id: 'azul', name: 'Azul', colors: { text: '#FFFFFF', accent: '#3B82F6', background: '#0F172A', secondary: '#DBEAFE' } },
   { id: 'rose', name: 'Rose', colors: { text: '#FFFFFF', accent: '#F2A9C0', background: '#1C1519', secondary: '#FBE7EE' } },
   { id: 'cream', name: 'Cream', colors: { text: '#FFF8EC', accent: '#E9C98B', background: '#F3EBDD', secondary: '#2B241C' } },
   { id: 'lemon', name: 'Lemon', colors: { text: '#FFFFFF', accent: '#F4E36B', background: '#1D1B12', secondary: '#FFF7C2' } },

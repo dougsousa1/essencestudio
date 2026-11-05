@@ -50,7 +50,7 @@ export const ExportPanel: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <Section title="Exportar vídeo" hint={`MP4 ${project.format} · ${fmtTime(timeline.durationInSeconds)} · gerado no seu navegador`}>
         <Segmented
           value={quality}
@@ -60,7 +60,7 @@ export const ExportPanel: React.FC = () => {
             { value: 'high', label: 'Alta qualidade' },
           ]}
         />
-        {support && !support.ok ? <p className="rounded-xl bg-amber-500/10 p-3 text-xs text-amber-200">{support.reason ?? 'Use o Google Chrome para exportar.'}</p> : null}
+        {support && !support.ok ? <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">{support.reason ?? 'Use o Google Chrome para exportar.'}</p> : null}
         {progress ? (
           <div className="space-y-2">
             <Progress value={progress.progress} label={progress.message} />
@@ -73,13 +73,13 @@ export const ExportPanel: React.FC = () => {
             ⬇ Exportar MP4
           </Button>
         )}
-        {error ? <p className="rounded-xl bg-red-500/10 p-3 text-xs text-red-200">{error}</p> : null}
+        {error ? <p className="rounded-xl bg-red-50 p-3 text-xs text-red-700">{error}</p> : null}
         {result ? (
-          <div className="space-y-2 rounded-2xl bg-ink p-3 ring-1 ring-line">
+          <div className="space-y-2 rounded-2xl bg-subtle p-3 ring-1 ring-line">
             <video src={result.url} controls className="max-h-64 w-full rounded-xl bg-black" />
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted">{(result.size / 1024 / 1024).toFixed(1)} MB · pronto para postar</span>
-              <a href={result.url} download={`${name}-essence.mp4`} className="font-semibold text-rose">
+              <a href={result.url} download={`${name}-essence.mp4`} className="font-semibold text-brand">
                 Baixar de novo
               </a>
             </div>
@@ -94,7 +94,7 @@ export const ExportPanel: React.FC = () => {
       </Section>
 
       <Section title="Legenda do post" hint="Texto pronto para colar no Instagram.">
-        <textarea readOnly value={caption} className="h-32 w-full rounded-xl bg-ink p-3 text-xs leading-relaxed ring-1 ring-line-strong outline-none" />
+        <textarea readOnly value={caption} className="h-32 w-full rounded-xl bg-subtle p-3 text-xs leading-relaxed ring-1 ring-line-strong outline-none" />
         <div className="flex gap-2">
           <Button
             size="sm"

@@ -25,6 +25,9 @@ type StudioState = {
   updateEffect: (id: string, patch: Partial<EffectInstance>) => void;
   updateEffectProps: (id: string, patch: Record<string, unknown>) => void;
   removeEffect: (id: string) => void;
+  /** Effect picked in the library, waiting to be placed in the studio. */
+  pendingEffect: string | null;
+  setPendingEffect: (id: string | null) => void;
   /** Current preview time (seconds), kept in sync by the Player. */
   playhead: number;
   setPlayhead: (t: number) => void;
@@ -80,6 +83,8 @@ export const useStudio = create<StudioState>((set, get) => ({
       project: { ...s.project, effects: s.project.effects.map((e) => (e.id === id ? { ...e, props: { ...e.props, ...patch } } : e)) },
     })),
   removeEffect: (id) => set((s) => ({ project: { ...s.project, effects: s.project.effects.filter((e) => e.id !== id) } })),
+  pendingEffect: null,
+  setPendingEffect: (pendingEffect) => set({ pendingEffect }),
   playhead: 0,
   setPlayhead: (playhead) => set({ playhead }),
   presets: readPresets(),

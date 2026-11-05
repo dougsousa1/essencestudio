@@ -7,6 +7,7 @@ import { EFFECTS, getEffect, defaultProps } from '../../effects/registry';
 import { CATEGORIES, type CategoryId, type EffectDef, type FieldDef } from '../../effects/types';
 import { Main } from '../../remotion/Main';
 import { seekPreview } from '../Preview';
+import { navigate } from '../router';
 import { Button, ColorInput, Section, Select, Slider, TextInput, Toggle, fmtTime } from '../kit';
 
 const SOURCE_LABEL: Record<EffectDef['source'], string> = {
@@ -88,7 +89,7 @@ const FieldInput: React.FC<{ field: FieldDef; value: unknown; onChange: (v: unkn
           <textarea
             value={String(value ?? '')}
             onChange={(e) => onChange(e.target.value)}
-            className="h-20 w-full rounded-xl bg-ink p-3 text-sm ring-1 ring-line-strong outline-none focus:ring-rose"
+            className="h-20 w-full rounded-xl bg-subtle p-3 text-sm ring-1 ring-line-strong outline-none focus:ring-brand"
           />
         </label>
       );
@@ -112,9 +113,9 @@ const PlacedItem: React.FC<{ inst: EffectInstance; open: boolean; onToggle: () =
   const start = word ? word.outStart : inst.at;
   const sfx = (inst.props.sfx as string | undefined) ?? '';
   return (
-    <div className={`rounded-2xl ring-1 ${open ? 'bg-panel-2 ring-rose/60' : 'bg-ink ring-line'}`}>
+    <div className={`rounded-2xl ring-1 ${open ? 'bg-subtle ring-brand-ring' : 'bg-subtle ring-line'}`}>
       <button onClick={onToggle} className="flex w-full items-center gap-3 px-3 py-2.5 text-left">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose/15 text-xs text-rose">{CATEGORY_ICON[def.category]}</span>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-xs text-brand">{CATEGORY_ICON[def.category]}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">{def.name}</span>
           <span className="block truncate text-[11px] text-muted">
@@ -150,10 +151,17 @@ const PlacedItem: React.FC<{ inst: EffectInstance; open: boolean; onToggle: () =
 };
 
 export const EffectsPanel: React.FC = () => {
-  const { project, addEffect, setStep, playhead } = useStudio();
+  const { project, addEffect, setStep, playhead, pendingEffect, setPendingEffect } = useStudio();
   const [cat, setCat] = useState<CategoryId | 'all'>('all');
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<string | null>(EFFECTS[0]?.id ?? null);
+  const [selected, setSelected] = useState<string | null>(pendingEffect ?? EFFECTS[0]?.id ?? null);
+  // An effect chosen in the library page opens here, ready to place.
+  React.useEffect(() => {
+    if (pendingEffect) {
+      setSelected(pendingEffect);
+      setPendingEffect(null);
+    }
+  }, [pendingEffect, setPendingEffect]);
   const [openId, setOpenId] = useState<string | null>(null);
   const timeline = useMemo(() => buildTimeline(project), [project]);
   const def = selected ? getEffect(selected) : undefined;
@@ -170,20 +178,28 @@ export const EffectsPanel: React.FC = () => {
   };
 
   return (
-    <div>
-      <Section title="Biblioteca de efeitos" hint={`${EFFECTS.length} efeitos de motion. Escolha um, veja no seu vídeo e aplique numa palavra.`}>
+    <div className="space-y-4">
+      <Section
+        title="Biblioteca de efeitos"
+        hint={`${EFFECTS.length} efeitos de motion. Escolha um, veja no seu vídeo e aplique numa palavra.`}
+        right={
+          <Button size="sm" variant="ghost" onClick={() => navigate('/biblioteca')}>
+            Ver tudo ›
+          </Button>
+        }
+      >
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar: zoom, celular, número…"
-          className="h-10 w-full rounded-xl bg-ink px-3 text-sm ring-1 ring-line-strong outline-none placeholder:text-muted/60 focus:ring-rose"
+          className="h-10 w-full rounded-xl bg-subtle px-3 text-sm ring-1 ring-line-strong outline-none placeholder:text-muted/60 focus:ring-brand"
         />
         <div className="-mx-1 flex gap-1 overflow-x-auto pb-1">
           {[{ id: 'all' as const, label: 'Todos' }, ...CATEGORIES].map((c) => (
             <button
               key={c.id}
               onClick={() => setCat(c.id)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition ${cat === c.id ? 'bg-rose text-ink ring-rose' : 'text-muted ring-line-strong hover:text-fg'}`}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition ${cat === c.id ? 'bg-brand text-white ring-brand' : 'text-muted ring-line-strong hover:text-fg'}`}
             >
               {c.label}
             </button>
@@ -194,14 +210,14 @@ export const EffectsPanel: React.FC = () => {
             <button
               key={e.id}
               onClick={() => setSelected(e.id)}
-              className={`rounded-2xl p-3 text-left ring-1 transition ${selected === e.id ? 'bg-panel-2 ring-2 ring-rose' : 'bg-ink ring-line hover:ring-rose/50'}`}
+              className={`rounded-2xl p-3 text-left ring-1 transition ${selected === e.id ? 'bg-subtle ring-2 ring-brand' : 'bg-subtle ring-line hover:ring-brand-ring'}`}
             >
               <div className="mb-2 flex items-center justify-between">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose/15 text-[11px] text-rose">{CATEGORY_ICON[e.category]}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-soft text-[11px] text-brand">{CATEGORY_ICON[e.category]}</span>
                 <span className="text-[9px] uppercase tracking-wider text-muted">{SOURCE_LABEL[e.source]}</span>
               </div>
               <div className="text-[13px] font-semibold leading-tight">{e.name}</div>
-              <div className="mt-0.5 truncate font-display text-[11px] italic text-rose/80">{e.term}</div>
+              <div className="mt-0.5 truncate font-display text-[11px] italic text-brand/80">{e.term}</div>
             </button>
           ))}
           {list.length === 0 ? <p className="col-span-2 py-6 text-center text-xs text-muted">Nenhum efeito encontrado.</p> : null}
@@ -215,12 +231,12 @@ export const EffectsPanel: React.FC = () => {
           {timeline.words.length ? (
             <>
               <div className="text-xs font-semibold text-fg/90">Clique na palavra que dispara o efeito:</div>
-              <div className="max-h-40 overflow-y-auto rounded-2xl bg-ink p-2 leading-7 ring-1 ring-line">
+              <div className="max-h-40 overflow-y-auto rounded-2xl bg-subtle p-2 leading-7 ring-1 ring-line">
                 {timeline.words.map((w) => (
                   <button
                     key={w.id}
                     onClick={() => place(w.id)}
-                    className={`mr-1 rounded-md px-1 text-[13px] transition hover:bg-rose hover:text-ink ${wordsWithFx.has(w.id) ? 'bg-rose/20 text-rose' : 'text-fg'}`}
+                    className={`mr-1 rounded-md px-1 text-[13px] transition hover:bg-brand hover:text-white ${wordsWithFx.has(w.id) ? 'bg-brand-soft text-brand' : 'text-fg'}`}
                   >
                     {w.text}
                   </button>
@@ -248,7 +264,7 @@ export const EffectsPanel: React.FC = () => {
           ))}
       </Section>
 
-      <div className="p-5">
+      <div className="pt-1">
         <Button variant="primary" className="w-full" onClick={() => setStep('sound')}>
           Próximo: som ›
         </Button>

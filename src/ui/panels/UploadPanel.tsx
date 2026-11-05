@@ -13,17 +13,15 @@ const readMeta = (url: string) =>
     v.src = url;
   });
 
-export const UploadPanel: React.FC = () => {
-  const { project, setVideo, setFormat, setStep } = useStudio();
-  const input = useRef<HTMLInputElement>(null);
-  const [drag, setDrag] = useState(false);
+/** Reads a dropped/selected video file into the project. Returns true on success. */
+export const useVideoUpload = () => {
+  const { project, setVideo, setFormat } = useStudio();
   const [error, setError] = useState<string | null>(null);
-
   const onFile = async (file: File) => {
     setError(null);
     if (!file.type.startsWith('video/')) {
       setError('Escolha um arquivo de vídeo (MP4, MOV ou WebM).');
-      return;
+      return false;
     }
     const url = URL.createObjectURL(file);
     try {
@@ -33,13 +31,23 @@ export const UploadPanel: React.FC = () => {
       // Pick the format that matches the footage.
       const r = meta.width / meta.height;
       setFormat(r < 0.8 ? '9:16' : r > 1.25 ? '16:9' : '1:1');
+      return true;
     } catch (e) {
       setError((e as Error).message);
+      return false;
     }
   };
+  return { onFile, error };
+};
+
+export const UploadPanel: React.FC = () => {
+  const { project, setFormat, setStep } = useStudio();
+  const input = useRef<HTMLInputElement>(null);
+  const [drag, setDrag] = useState(false);
+  const { onFile, error } = useVideoUpload();
 
   return (
-    <div>
+    <div className="space-y-4">
       <Section title="Seu vídeo" hint="O vídeo fica só no seu navegador. Nada é enviado para servidores.">
         <div
           onDragOver={(e) => {
@@ -55,10 +63,10 @@ export const UploadPanel: React.FC = () => {
           }}
           onClick={() => input.current?.click()}
           className={`flex cursor-pointer flex-col items-center justify-center rounded-3xl border border-dashed px-6 py-10 text-center transition ${
-            drag ? 'border-rose bg-rose/10' : 'border-line-strong bg-ink hover:border-rose/60'
+            drag ? 'border-brand bg-brand-soft' : 'border-line-strong bg-subtle hover:border-brand'
           }`}
         >
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-rose/15 text-xl text-rose">↑</div>
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-xl text-brand">↑</div>
           <div className="text-sm font-semibold">Arraste seu vídeo aqui</div>
           <div className="mt-1 text-xs text-muted">ou clique para escolher · MP4, MOV, WebM</div>
           <input
@@ -73,9 +81,9 @@ export const UploadPanel: React.FC = () => {
             }}
           />
         </div>
-        {error ? <p className="text-xs text-red-300">{error}</p> : null}
+        {error ? <p className="text-xs text-red-600">{error}</p> : null}
         {project.video ? (
-          <div className="rounded-2xl bg-ink p-3 text-xs ring-1 ring-line">
+          <div className="rounded-2xl bg-subtle p-3 text-xs ring-1 ring-line">
             <div className="truncate font-medium text-fg">{project.video.name}</div>
             <div className="mt-1 text-muted">
               {fmtTime(project.video.durationInSeconds)} · {project.video.width}×{project.video.height}
@@ -94,7 +102,7 @@ export const UploadPanel: React.FC = () => {
           ]}
         />
       </Section>
-      <div className="p-5">
+      <div className="pt-1">
         <Button variant="primary" className="w-full" disabled={!project.video} onClick={() => setStep('cut')}>
           Próximo: cortar ›
         </Button>

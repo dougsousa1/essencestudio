@@ -27,7 +27,7 @@ export const SoundPanel: React.FC = () => {
   const withSfx = project.words.filter((w) => !w.removed && (w.sfx || (w.emphasis && snd.autoOnEmphasis))).length;
 
   return (
-    <div>
+    <div className="space-y-4">
       <Section title="Efeitos sonoros" hint="Os sons entram no momento exato da palavra, baixinho, por baixo da sua voz.">
         <Toggle label="Ativar sons" checked={snd.enabled} onChange={(v) => setSound({ enabled: v })} />
         <Slider label="Volume" value={snd.volume} min={0} max={1} onChange={(v) => setSound({ volume: v })} format={(v) => `${Math.round(v * 100)}%`} />
@@ -45,7 +45,7 @@ export const SoundPanel: React.FC = () => {
         </div>
         <p className="text-xs text-muted">Música de fundo: adicione no próprio Instagram ou TikTok, com áudios em alta e sem problemas de direitos autorais.</p>
       </Section>
-      <div className="p-5">
+      <div className="pt-1">
         <Button variant="primary" className="w-full" onClick={() => setStep('export')}>
           Próximo: exportar ›
         </Button>

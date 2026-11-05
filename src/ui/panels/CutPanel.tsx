@@ -63,7 +63,7 @@ export const CutPanel: React.FC = () => {
   const removedCount = words.filter((w) => w.removed).length;
 
   return (
-    <div>
+    <div className="space-y-4">
       <Section title="Transcrição" hint="A IA escuta o vídeo e escreve cada palavra com o tempo exato. Roda no seu computador.">
         {words.length === 0 && !progress ? (
           <>
@@ -101,14 +101,14 @@ export const CutPanel: React.FC = () => {
             </Button>
           </div>
         ) : null}
-        {error ? <p className="rounded-xl bg-red-500/10 p-3 text-xs text-red-200">{error}</p> : null}
+        {error ? <p className="rounded-xl bg-red-50 p-3 text-xs text-red-700">{error}</p> : null}
         {manual ? (
           <div className="space-y-2">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Cole aqui o que você fala no vídeo…"
-              className="h-28 w-full rounded-xl bg-ink p-3 text-sm ring-1 ring-line-strong outline-none focus:ring-rose"
+              className="h-28 w-full rounded-xl bg-subtle p-3 text-sm ring-1 ring-line-strong outline-none focus:ring-brand"
             />
             <Button size="sm" onClick={applyManual} disabled={!text.trim()}>
               Usar este texto
@@ -129,10 +129,10 @@ export const CutPanel: React.FC = () => {
             {project.cut.removeSilences ? (
               <Slider label="Pausa mínima para cortar" value={project.cut.minSilence} min={0.15} max={1.5} step={0.05} onChange={(v) => setCut({ minSilence: v })} format={(v) => `${v.toFixed(2)} s`} />
             ) : null}
-            <div className="flex items-center justify-between rounded-2xl bg-ink px-4 py-3 text-xs ring-1 ring-line">
+            <div className="flex items-center justify-between rounded-2xl bg-subtle px-4 py-3 text-xs ring-1 ring-line">
               <span className="text-muted">Duração</span>
               <span className="tabular-nums">
-                {fmtTime(video?.durationInSeconds ?? 0)} → <b className="text-rose">{fmtTime(timeline.durationInSeconds)}</b>
+                {fmtTime(video?.durationInSeconds ?? 0)} → <b className="text-brand">{fmtTime(timeline.durationInSeconds)}</b>
               </span>
             </div>
           </Section>
@@ -157,7 +157,7 @@ export const CutPanel: React.FC = () => {
                 { value: 'sfx', label: '♪ Som' },
               ]}
             />
-            <div className="max-h-[42vh] overflow-y-auto rounded-2xl bg-ink p-3 leading-8 ring-1 ring-line">
+            <div className="max-h-[42vh] overflow-y-auto rounded-2xl bg-subtle p-3 leading-8 ring-1 ring-line">
               {words.map((w) => (
                 <button
                   key={w.id}
@@ -167,12 +167,12 @@ export const CutPanel: React.FC = () => {
                     w.removed
                       ? 'text-muted/50 line-through decoration-red-300/70'
                       : w.emphasis
-                        ? 'bg-rose/20 font-display italic text-rose'
-                        : 'text-fg hover:bg-panel-2'
+                        ? 'bg-brand-soft font-serif italic text-brand'
+                        : 'text-fg hover:bg-subtle'
                   }`}
                 >
                   {w.text}
-                  {w.sfx ? <sup className="ml-0.5 text-[9px] text-cream/80">♪{w.sfx}</sup> : null}
+                  {w.sfx ? <sup className="ml-0.5 text-[9px] text-brand">♪{w.sfx}</sup> : null}
                 </button>
               ))}
             </div>
@@ -188,7 +188,7 @@ export const CutPanel: React.FC = () => {
         </>
       ) : null}
 
-      <div className="p-5">
+      <div className="pt-1">
         <Button variant="primary" className="w-full" onClick={() => setStep('look')}>
           Próximo: estilo ›
         </Button>
