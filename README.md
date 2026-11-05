@@ -45,7 +45,7 @@ node ~/.essence-studio/app/engine/doctor.mjs
 
 1. **Vídeo**: envio do arquivo e escolha do formato (9:16, 1:1, 16:9).
 2. **Cortar**: transcrição com Whisper via WebGPU (`@remotion/whisper-webgpu`). Remove silêncios e vícios ("né", "hã"…). Clique nas palavras para cortar, destacar ou pôr som.
-3. **Estilo**: 4 looks (Soft, Scrapbook, Signature, Headline), paletas, cores livres, fontes do Google, tamanho e posição das legendas, modo das legendas, movimento e correção de cor. Estilos podem ser salvos.
+3. **Estilo**: 4 looks (Suave, Colagem, Editorial, Manchete), paletas, cores livres, fontes do Google, tamanho e posição das legendas, modo das legendas, movimento e correção de cor. Estilos podem ser salvos.
 4. **Efeitos**: "uma palavra = um efeito". Escolha um efeito, veja a prévia no seu vídeo e clique na palavra que dispara o efeito. Cada efeito tem texto, cores, duração e som editáveis.
 5. **Som**: efeitos sonoros (pop, swish, brilho, papel, clique, whoosh) no momento exato das palavras.
 6. **Exportar**: MP4 gerado no navegador (`@remotion/web-renderer`), capa em JPG e legenda do post.
