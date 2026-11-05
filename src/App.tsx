@@ -30,7 +30,7 @@ export default function App() {
   const current = STEPS[idx];
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col overflow-y-auto md:overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-line px-5">
         <div className="flex items-baseline gap-2">
           <span className="font-display text-xl italic text-rose">Essence</span>
@@ -42,7 +42,7 @@ export default function App() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      <div className="flex flex-1 flex-col md:min-h-0 md:flex-row">
         <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-line p-2 md:w-52 md:flex-col md:border-b-0 md:border-r md:p-3">
           {STEPS.map((s, i) => {
             const active = s.id === step;
@@ -71,7 +71,7 @@ export default function App() {
           <Preview />
         </main>
 
-        <aside className="flex min-h-0 w-full shrink-0 flex-col border-t border-line bg-panel md:w-[380px] md:border-l md:border-t-0">
+        <aside className="flex w-full md:min-h-0 shrink-0 flex-col border-t border-line bg-panel md:w-[380px] md:border-l md:border-t-0">
           <div className="border-b border-line px-5 py-4">
             <div className="text-xs uppercase tracking-[0.12em] text-rose">Passo {idx + 1}</div>
             <h2 className="mt-1 text-lg font-semibold tracking-tight">{current.desc}</h2>
