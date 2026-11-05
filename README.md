@@ -9,6 +9,38 @@ O app tem três partes:
 - **Estúdio** (`#/studio`): edição em 6 passos, com prévia ao vivo numa moldura de celular.
 - **Biblioteca de efeitos** (`#/biblioteca`): efeitos de motion com prévia, botão "Usar no meu vídeo" e "Copiar" (o pedido em texto, para colar no Claude ou ChatGPT).
 
+## Instalar no Claude (plugin)
+
+Você precisa do [Claude Code](https://claude.com/claude-code) num plano pago do Claude, e de um Mac ou PC com Windows.
+
+Abra o Claude Code e cole esta frase:
+
+```
+instale o Essence Studio de github.com/dougsousa1/essencestudio (npx skills add dougsousa1/essencestudio), rode a checagem dele e me diga se falta alguma coisa
+```
+
+Ou instale pelo terminal:
+
+```bash
+npx skills add dougsousa1/essencestudio
+```
+
+Depois, no Claude Code, arraste um vídeo e escreva **editar**. Na primeira vez o Claude faz uma entrevista rápida sobre a sua marca (cores, fontes, legendas, ritmo) e usa isso em todo vídeo.
+
+A checagem também pode ser rodada à mão:
+
+```bash
+node ~/.essence-studio/app/engine/doctor.mjs
+```
+
+### Como o plugin edita
+
+1. **Transcreve** o vídeo no seu computador (whisper.cpp, grátis).
+2. **Storyboard:** o Claude propõe cortes (retakes, vícios, pausas), destaques, título e efeitos, e espera o seu ok.
+3. **Rascunho:** gera um MP4 rápido com o Remotion (`engine/render.mjs --draft`).
+4. **Mudanças:** você escreve o que mudar, uma por linha.
+5. **Final:** MP4 em 1080×1920, capa em JPG e legenda do post.
+
 ## Passos do estúdio
 
 1. **Vídeo**: envio do arquivo e escolha do formato (9:16, 1:1, 16:9).
@@ -47,6 +79,8 @@ Use o Google Chrome: ele tem suporte completo a WebGPU (transcrição) e WebCode
 2. Use `Overlay` para desenhar por cima, `Backdrop` para desenhar atrás do vídeo e `videoStyle` para transformar o vídeo. `VideoCopy` desenha uma cópia sincronizada do vídeo (para grades, polaroids, telas de celular).
 3. Leia as cores e fontes de `style` para o efeito combinar com o look escolhido.
 4. Use só CSS suportado pela exportação no navegador: nada de `radial-gradient`, `background: url()`, `clip-path` ou 3D real. Filtros em elementos com filhos precisam de `subtreeFilter()` (`src/effects/util.ts`).
+
+O fluxo de instalação com checagem e a entrevista de marca foram inspirados no [claude-reel-editor](https://github.com/nicolapocock/claude-reel-editor) (MIT).
 
 Inspirações e fontes de código: [Remocn](https://remocn.dev) (MIT), [Remotion Elements](https://www.remotion.dev/elements) e a [biblioteca de motion do apenasdouglas](https://github.com/apenasdouglas/ai-motion-library).
 

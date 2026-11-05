@@ -1,20 +1,22 @@
 ---
 name: instalar
-description: Instala o Essence Studio no computador (Node, ffmpeg, dependências, modelo de transcrição). Use na primeira vez, quando o usuário disser "instalar", "configurar o estúdio", ou quando a skill editar encontrar ferramentas faltando.
+description: Instala e checa o Essence Studio no computador (motor de vídeo, ffmpeg, Node, modelo de transcrição). Use na primeira vez, quando o usuário colar "instale o Essence Studio…", disser "instalar", "configurar o estúdio", "rodar a checagem", ou quando a skill editar encontrar algo faltando.
 ---
 
 # Instalar o Essence Studio
 
-O usuário não é técnico. Faça tudo sozinho, com mensagens curtas e simples. Só peça algo quando for impossível fazer por ele (por exemplo, a senha do computador).
+O usuário não é técnico. Faça tudo sozinho, com mensagens curtas e simples. Só peça algo quando for impossível fazer por ele (por exemplo, a senha do computador num comando do Homebrew).
 
-`R` abaixo é a pasta raiz deste plugin (a pasta que contém `.claude-plugin/`).
+## Onde fica o app
+`R` = `~/.essence-studio/app`, uma cópia do repositório `github.com/dougsousa1/essencestudio`.
+- Se `R` não existe: `git clone --depth 1 https://github.com/dougsousa1/essencestudio.git ~/.essence-studio/app`.
+- Se existe: `git -C ~/.essence-studio/app pull --ff-only` para atualizar.
+- Sem git no Windows: `winget install Git.Git`. No Mac, o próprio sistema oferece instalar.
 
-1. Confira as ferramentas: `node -v` (precisa de 20 ou mais), `ffmpeg -version`, `ffprobe -version`.
-   - Mac sem ffmpeg: `brew install ffmpeg` (sem Homebrew, peça para o usuário colar o comando de instalação do brew.sh no Terminal).
-   - Windows sem ffmpeg: `winget install Gyan.FFmpeg`. Sem Node: `winget install OpenJS.NodeJS.LTS`.
-2. `cd "$R" && npm install` (uma vez; pode levar alguns minutos).
-3. Baixe o modelo de transcrição testando em silêncio: crie um vídeo de 1 s com ffmpeg numa pasta temporária, rode `node "$R/engine/new.mjs"` e `node "$R/engine/transcribe.mjs"` nele. Na primeira vez isso baixa o whisper.cpp e o modelo (cerca de 500 MB) para `~/.essence-studio/`.
-4. Pergunte só duas coisas e salve em `~/.essence-studio/marca.json`:
-   - a pasta onde ficam os vídeos editados (padrão: `~/Movies/Essence` no Mac, `~/Videos/Essence` no Windows);
-   - o @ do Instagram (aparece em alguns efeitos).
-5. Diga: "Pronto! Para editar, é só arrastar um vídeo aqui e escrever *editar*."
+## Passos
+1. `cd "$R" && npm install` (alguns minutos na primeira vez).
+2. Rode a checagem: `node "$R/engine/doctor.mjs"`.
+3. Resolva cada item com ❌ usando o comando que a checagem mostra, e rode a checagem de novo até aparecer **PRONTO** ou **PRONTO COM LIMITES**.
+4. Termine com: "Tudo pronto! Para editar, arraste um vídeo aqui e escreva *editar*."
+
+Nunca mostre logs longos. Se algo falhar duas vezes, explique em uma frase o que faltou e o que a pessoa precisa fazer.
