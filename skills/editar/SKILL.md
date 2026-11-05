@@ -23,31 +23,39 @@ node "$R/engine/transcribe.mjs" "$P" pt
 Leia `$P/transcript.md` (cada linha: `[id tempo] palavra`).
 Copie para `$P/project.json` o que a marca define: `look`, `style` (cores, fontes, legendas) e o ritmo (`cut.minSilence`: 0.45 natural, 0.25 rápido).
 
-## 2. Janela do estúdio (Presets)
-Abra o estúdio para ele escolher o estilo: `cd "$R" && npx vite --port 5180` em segundo plano, e diga para abrir `http://localhost:5180/#/studio?projeto=<P>`.
-Ele escolhe look, cores, fontes, posição das legendas e efeitos; tudo fica salvo em `$P/project.json`. Quando ele disser "pronto" ou "enviei", siga.
+## 2. Abrir a janela de revisão
+1. Inicie o estúdio em segundo plano (se ainda não estiver rodando): `cd "$R" && npx vite --port 5180`.
+2. Mande o link: `http://localhost:5180/#/revisao?projeto=<P codificado para URL>` e diga: "Abri a janela do estúdio. Escolha o estilo e clique em **Enviar para o Claude**."
+3. Fique esperando os pedidos dela, sempre em segundo plano: `node "$R/engine/esperar.mjs" "$P"`. Quando o comando terminar, ele imprime o pedido em JSON. Responda conforme o campo `acao` e depois rode `esperar.mjs` de novo.
 
-## 3. Storyboard (plano antes de gerar)
-Edite `$P/project.json` e mostre um plano curto em tópicos:
+A janela salva cada escolha em `$P/project.json` sozinha, e mostra na hora tudo o que você mudar nesse arquivo. Para avisar o que está fazendo, escreva uma frase curta em `$P/status.txt` (ela aparece no topo da janela).
+
+## 3. `acao: "montar-storyboard"` (o plano)
+Edite `$P/project.json`:
 - **Cortes:** marque `removed: true` em retakes (a mesma frase dita duas vezes: fique com a última), falsos começos e vícios ("hã", "né", "tipo" soltos). Mantenha vícios que dão sentido.
 - **Destaques:** `emphasis: true` em 1 palavra a cada ~6 (números, nomes, palavras de impacto).
 - **Título:** `title.text` com um gancho de até 5 palavras tirado da fala.
-- **Efeitos:** "uma palavra = um efeito". Adicione em `effects` (`{id, effectId, wordId, at: 0, durationInSeconds, props}`) na densidade da marca (`efeitos`: poucos, equilibrado ou muitos), sempre nos momentos fortes. Cada efeito precisa mostrar o que aquela frase diz. Ids disponíveis: veja a skill **biblioteca**. Nunca dois efeitos grandes ao mesmo tempo.
+- **Efeitos:** "uma palavra = um efeito". Adicione em `effects` (`{id, effectId, wordId, at: 0, durationInSeconds, props}`) na densidade da marca (`efeitos`: poucos, equilibrado ou muitos), sempre nos momentos fortes. Cada efeito precisa mostrar o que aquela frase diz. Ids e campos: skill **biblioteca**. Nunca dois efeitos grandes ao mesmo tempo.
 - Se o usuário colou um pedido da Biblioteca ("Efeito X… Coloque na palavra [PALAVRA]"), aplique exatamente esse efeito nessa palavra.
-Pergunte: "Posso gerar o rascunho?"
+Escreva em `status.txt`: "Plano pronto: confira na aba Storyboard". No chat, resuma o plano em 3 a 5 linhas.
 
-## 4. Rascunho
+## 4. `acao: "gerar-rascunho"`
 ```bash
 node "$R/engine/render.mjs" "$P" --draft
 ```
-Diga onde está `$P/out/rascunho.mp4` e peça: "Quer mudanças? Escreva todas aqui, uma por linha."
+O progresso aparece sozinho na janela, e o vídeo aparece na aba Rascunho quando terminar.
 
-## 5. Mudanças e versão final
-Aplique cada linha no `project.json` (texto, cor, posição, tirar/colocar efeito, cortar trecho). Gere outro rascunho. Quando ele aprovar:
+## 5. `acao: "mudancas"` (campo `mudancas`: uma mudança por item)
+Aplique cada item no `project.json` (texto, cor, posição, tirar ou colocar efeito, cortar trecho) e gere outro rascunho. Se algum pedido for impossível, explique em uma frase no chat e no `status.txt`.
+
+## 6. `acao: "versao-final"`
 ```bash
 node "$R/engine/render.mjs" "$P"
 ```
-Entregue `$P/out/reel.mp4`, `$P/out/capa.jpg` e escreva a legenda do post na voz dele (gancho + 2 frases + 3 hashtags) em `$P/out/legenda.txt`.
+Entregue `$P/out/reel.mp4` e `$P/out/capa.jpg` (os dois aparecem para baixar na janela) e escreva a legenda do post na voz da pessoa (gancho + 2 frases + 3 hashtags) em `$P/out/legenda.txt`.
+
+## Sem a janela
+Se a pessoa preferir o chat, siga as mesmas etapas pela conversa: mostre o plano em tópicos, pergunte "posso gerar o rascunho?" e depois "Quer mudanças? Escreva todas aqui, uma por linha."
 
 ## Regras
 - Texto nunca embaixo dos botões do Instagram (posição das legendas entre 0.1 e 0.8).

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 
-export type Route = '/' | '/studio' | '/biblioteca';
+export type Route = '/' | '/studio' | '/biblioteca' | '/revisao';
+
+/** Query string inside the hash, e.g. #/revisao?projeto=/path */
+export const hashParam = (k: string) => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get(k);
 
 const read = (): Route => {
-  const h = window.location.hash.replace(/^#/, '') || '/';
-  return h === '/studio' || h === '/biblioteca' ? h : '/';
+  const h = window.location.hash.replace(/^#/, '').split('?')[0] || '/';
+  return h === '/studio' || h === '/biblioteca' || h === '/revisao' ? h : '/';
 };
 
 export const navigate = (to: Route) => {

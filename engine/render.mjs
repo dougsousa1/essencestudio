@@ -1,6 +1,6 @@
 // Usage: node engine/render.mjs "<project folder>" [--draft]
 // Renders project.json to <project>/out/reel.mp4 with the full Remotion renderer (headless Chrome).
-import { cpSync, mkdirSync, readFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
@@ -45,8 +45,11 @@ await renderMedia({
     if (p !== last) {
       last = p;
       console.log(`Gerando… ${p * 10}%`);
+      // The review window shows this line while the video is being made.
+      writeFileSync(join(dir, 'status.txt'), `${draft ? 'Gerando o rascunho' : 'Gerando a versão final'}… ${p * 10}%`);
     }
   },
 });
 await renderStill({ composition, serveUrl, inputProps, browserExecutable, chromiumOptions, output: join(dir, 'out', 'capa.jpg'), imageFormat: 'jpeg', frame: Math.min(composition.durationInFrames - 1, 30) });
+writeFileSync(join(dir, 'status.txt'), draft ? 'Rascunho pronto' : 'Versão final pronta');
 console.log(`Pronto: ${output}`);

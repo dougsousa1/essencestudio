@@ -12,6 +12,8 @@ type StudioState = {
   step: StepId;
   setStep: (s: StepId) => void;
   setVideo: (v: Project['video']) => void;
+  /** Replace the whole project (used when syncing with the project Claude edits). */
+  setProject: (p: Project) => void;
   setWords: (w: Word[]) => void;
   updateWord: (id: string, patch: Partial<Word>) => void;
   setCut: (patch: Partial<Project['cut']>) => void;
@@ -50,6 +52,7 @@ export const useStudio = create<StudioState>((set, get) => ({
   step: 'upload',
   setStep: (step) => set({ step }),
   setVideo: (video) => set((s) => ({ project: { ...s.project, video, words: [], effects: [] } })),
+  setProject: (project) => set({ project }),
   setWords: (words) => set((s) => ({ project: { ...s.project, words } })),
   updateWord: (id, patch) =>
     set((s) => ({

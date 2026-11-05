@@ -3,6 +3,7 @@ import { navigate, useRoute, type Route } from './ui/router';
 import { HomePage } from './ui/pages/HomePage';
 import { StudioPage } from './ui/pages/StudioPage';
 import { LibraryPage } from './ui/pages/LibraryPage';
+import { ReviewPage } from './ui/pages/ReviewPage';
 import { useStudio } from './core/store';
 
 const NAV: Array<{ to: Route; label: string }> = [
@@ -52,7 +53,7 @@ export default function App() {
           </button>
         </div>
       </header>
-      <main>{route === '/studio' ? <StudioPage /> : route === '/biblioteca' ? <LibraryPage /> : <HomePage />}</main>
+      <main>{route === '/revisao' ? <ReviewPage /> : route === '/studio' ? <StudioPage /> : route === '/biblioteca' ? <LibraryPage /> : <HomePage />}</main>
     </div>
   );
 }
