@@ -1,7 +1,7 @@
 // Usage: node engine/transcribe.mjs "<project folder>" [language=pt] [model=small]
 // Transcribes the project video locally with whisper.cpp and writes the words into project.json.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { downloadWhisperModel, installWhisperCpp, toCaptions, transcribe } from '@remotion/install-whisper-cpp';
@@ -13,6 +13,9 @@ const tools = join(homedir(), '.essence-studio', 'whisper');
 const project = JSON.parse(readFileSync(join(dir, 'project.json'), 'utf8'));
 
 await installWhisperCpp({ to: tools, version: '1.7.6', printOutput: false });
+// A download cut in the middle leaves a broken file: remove it so it downloads again.
+const modelFile = join(tools, `ggml-${model}.bin`);
+if (existsSync(modelFile) && statSync(modelFile).size < 50 * 1024 * 1024) rmSync(modelFile);
 await downloadWhisperModel({ model, folder: tools, printOutput: false });
 
 const wav = join(dir, 'audio16k.wav');
