@@ -38,6 +38,11 @@ export const Preview: React.FC = () => {
     w = h * ratio;
   }
 
+  useEffect(() => {
+    // Handy for automated checks in development.
+    if (import.meta.env.DEV) (window as unknown as { __player?: PlayerRef | null }).__player = playerRef.current;
+  });
+
   const inputProps = useMemo(() => ({ project }), [project, fontsTick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

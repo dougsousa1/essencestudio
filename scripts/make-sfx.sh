@@ -37,6 +37,6 @@ render shimmer 0.9 "aevalsrc='0.38*(sin(2*PI*2093*t)+0.7*sin(2*PI*2637*t+1)+0.5*
 render paper 0.42 "anoisesrc=d=0.42:c=white:r=44100:a=0.9,bandpass=f=3200:width_type=q:w=0.8,volume='(0.25+0.75*gt(sin(2*PI*23*t)+sin(2*PI*37*t+1)+sin(2*PI*61*t+2),1.2))*exp(-t/0.25)':eval=frame,afade=t=in:d=0.005,afade=t=out:st=0.36:d=0.06[out]"
 
 # click: very short tick.
-render click 0.06 "aevalsrc='0.6*(sin(2*PI*3200*t)+0.5*sin(2*PI*1600*t))*exp(-t/0.006)':s=44100:d=0.06,afade=t=in:d=0.0007,afade=t=out:st=0.04:d=0.02[out]"
+render click 0.15 "aevalsrc='0.6*(sin(2*PI*3200*t)+0.5*sin(2*PI*1600*t))*exp(-t/0.006)':s=44100:d=0.15,afade=t=in:d=0.0007,afade=t=out:st=0.1:d=0.05[out]"
 
 ls -la "$OUT"
