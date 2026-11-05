@@ -533,7 +533,7 @@ const TextSwap: React.FC<EffectRenderProps<SwapProps>> = ({ props, frame, fps, d
 
 // --- Ticker (motion library #16 + Remocn "infinite-marquee") -----------------
 
-type TickerProps = { text: string; speed: number };
+type TickerProps = { text: string; speed: number; position: string };
 
 const Ticker: React.FC<EffectRenderProps<TickerProps>> = ({ props, frame, fps, durationInFrames, width, height, style, word }) => {
   const u = unit(width, height);
@@ -567,7 +567,7 @@ const Ticker: React.FC<EffectRenderProps<TickerProps>> = ({ props, frame, fps, d
           position: 'absolute',
           left: -width * 0.15,
           width: width * 1.3,
-          top: height * 0.79 - bandH / 2,
+          top: height * (props.position === 'bottom' ? 0.79 : 0.16) - bandH / 2,
           height: bandH,
           backgroundColor: accent,
           overflow: 'hidden',
@@ -696,7 +696,8 @@ const GlitchWord: React.FC<EffectRenderProps<GlitchProps>> = ({ props, frame, fp
         }}
       >
         <div style={{ position: 'relative', isolation: 'isolate' }}>
-          <div style={{ ...textStyle, visibility: 'hidden' }}>{text}</div>
+          {/* Sizing copy. opacity 0, not visibility:hidden: the MP4 exporter ignores visibility. */}
+          <div style={{ ...textStyle, opacity: 0 }}>{text}</div>
           {Array.from({ length: strips }, (_, i) => {
             const shift = burst && rand(tick * 3.3 + i * 1.7) > 0.5 ? r(i + 10) * 34 * u : 0;
             return (
@@ -760,7 +761,8 @@ const LowerThird: React.FC<EffectRenderProps<LowerProps>> = ({ props, frame, fps
   const accent = style.colors.accent;
   const row = (p: number, content: React.ReactNode, rowStyle: React.CSSProperties) => (
     <div style={{ position: 'relative', alignSelf: 'flex-start' }}>
-      <div style={{ ...rowStyle, visibility: 'hidden' }}>{content}</div>
+      {/* Sizing copy. opacity 0, not visibility:hidden: the MP4 exporter ignores visibility. */}
+      <div style={{ ...rowStyle, opacity: 0 }}>{content}</div>
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${p * 100}%`, overflow: 'hidden' }}>
         <div style={{ ...rowStyle, width: 'max-content' }}>
           <div style={{ transform: `translateX(${(1 - p) * -30 * u}px)` }}>{content}</div>
@@ -924,13 +926,23 @@ export const TEXT_EFFECTS: EffectDef<any>[] = [
     name: 'Letreiro rolando',
     term: 'ticker · marquee',
     category: 'text',
-    description: 'Uma faixa inclinada na cor de destaque atravessa a parte de baixo da tela com o texto rolando sem parar, como rodapé de notícia.',
+    description: 'Uma faixa inclinada na cor de destaque atravessa a tela (em cima ou embaixo) com o texto rolando sem parar, como letreiro de notícia.',
     source: 'biblioteca',
     defaultDuration: 3.5,
     sfx: 'whoosh',
     fields: [
       { key: 'text', label: 'Texto', type: 'text', default: 'assista até o fim', placeholder: 'Vazio = palavra falada' },
       { key: 'speed', label: 'Velocidade', type: 'number', default: 1, min: 0.3, max: 3, step: 0.1 },
+      {
+        key: 'position',
+        label: 'Posição',
+        type: 'select',
+        default: 'top',
+        options: [
+          { value: 'top', label: 'Em cima' },
+          { value: 'bottom', label: 'Embaixo (cobre as legendas)' },
+        ],
+      },
     ],
     Overlay: Ticker,
   },

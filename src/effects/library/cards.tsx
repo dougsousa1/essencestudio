@@ -57,6 +57,12 @@ const mix = (a: string, b: string, t: number) => {
   if (!A || !B) return a;
   return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`;
 };
+/** `base` (hex or rgb()) with `rgb` composited on top at opacity `a`, as an opaque color. */
+const over = (base: string, rgb: [number, number, number], a: number) => {
+  const m = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(base.trim());
+  const B = hexRgb(base) ?? (m ? ([Number(m[1]), Number(m[2]), Number(m[3])] as [number, number, number]) : null);
+  return B ? `rgb(${B.map((v, i) => Math.round(v + (rgb[i] - v) * a)).join(',')})` : base;
+};
 const alpha = (c: string, a: number) => {
   const A = hexRgb(c);
   return A ? `rgba(${A.join(',')},${a})` : c;
@@ -1102,7 +1108,8 @@ const HeadlineWall: React.FC<EffectRenderProps<WallProps>> = ({ props, frame, fp
                 position: 'relative',
                 padding: `${18 * u}px ${34 * u}px ${20 * u}px`,
                 backgroundColor: paper,
-                backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.05) 100%)',
+                // Sheen baked into opaque stops: the MP4 exporter paints a background-image *instead of* the color.
+                backgroundImage: `linear-gradient(180deg, ${over(paper, [255, 255, 255], 0.35)} 0%, ${paper} 40%, ${over(paper, [0, 0, 0], 0.05)} 100%)`,
                 borderRadius: 4 * u,
                 boxShadow: `0 ${8 * u}px ${18 * u}px rgba(0,0,0,0.28), 0 ${1 * u}px ${2 * u}px rgba(0,0,0,0.2)`,
                 color: '#2B2226',

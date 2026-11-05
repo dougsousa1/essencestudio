@@ -101,22 +101,6 @@ const Polaroid: React.FC<{
         borderRadius: 3 * u,
       }}
     >
-      {tapeRot !== null ? (
-        <div
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: -photo * 0.06,
-            width: photo * 0.36,
-            height: photo * 0.12,
-            marginLeft: -photo * 0.18,
-            backgroundColor: 'rgba(222,205,160,0.78)',
-            boxShadow: `0 ${2 * u}px ${6 * u}px rgba(67,47,29,0.18)`,
-            transform: `rotate(${tapeRot}deg)`,
-            zIndex: 2,
-          }}
-        />
-      ) : null}
       <div style={{ position: 'relative' }}>
         <Footage VideoCopy={VideoCopy} w={photo} h={photo} compW={compW} compH={compH} focusY={focusY} zoom={zoom} filter={filter} />
         {develop < 1 ? (
@@ -140,6 +124,23 @@ const Polaroid: React.FC<{
       >
         {caption}
       </div>
+      {/* Tape last: the MP4 exporter paints in DOM order (it ignores zIndex). */}
+      {tapeRot !== null ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: -photo * 0.06,
+            width: photo * 0.36,
+            height: photo * 0.12,
+            marginLeft: -photo * 0.18,
+            backgroundColor: 'rgba(222,205,160,0.78)',
+            boxShadow: `0 ${2 * u}px ${6 * u}px rgba(67,47,29,0.18)`,
+            transform: `rotate(${tapeRot}deg)`,
+            zIndex: 2,
+          }}
+        />
+      ) : null}
     </div>
   );
 };
@@ -177,8 +178,8 @@ const PolaroidOrbit: React.FC<EffectRenderProps<OrbitProps>> = ({ props, frame, 
           left: x,
           top: y,
           transform: `translate(-50%, -50%) rotate(${rot}deg) skewY(${skew}deg) scale(${scale})`,
-          filter: subtreeFilter(`brightness(${0.62 + 0.38 * k}) blur(${(1 - k) * 2.6 * u}px)`),
-          opacity: 0.72 + 0.28 * k,
+          // opacity() inside the filter = group opacity in the MP4 export too (CSS opacity is applied per child there).
+          filter: subtreeFilter(`brightness(${0.62 + 0.38 * k}) blur(${(1 - k) * 2.6 * u}px) opacity(${0.72 + 0.28 * k})`),
         }}
       >
         <Polaroid
@@ -509,6 +510,8 @@ const PaperOverlay: React.FC<EffectRenderProps<PaperProps>> = ({ props, frame, f
           whiteSpace: 'nowrap',
         }}
       >
+        {props.label || '5 min'}
+        {/* Tape after the text: the browser paints positioned children on top, the exporter paints in DOM order. */}
         <div
           style={{
             position: 'absolute',
@@ -521,7 +524,6 @@ const PaperOverlay: React.FC<EffectRenderProps<PaperProps>> = ({ props, frame, f
             transform: 'rotate(4deg)',
           }}
         />
-        {props.label || '5 min'}
       </div>
       {/* ink marks on the paper margin */}
       <svg
