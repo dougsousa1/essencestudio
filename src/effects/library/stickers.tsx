@@ -400,7 +400,8 @@ const Doodles: React.FC<EffectRenderProps<DoodleProps>> = ({ props, frame, fps, 
         }}
       >
         <div style={{ overflow: 'hidden', width: `${wordP * 100}%` }}>
-          <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 130 * u, color, lineHeight: 1, whiteSpace: 'nowrap', width: 'max-content' }}>{label}</div>
+          {/* opacity 0 at width 0: the MP4 exporter does not clip with a zero-size overflow box. */}
+          <div style={{ fontFamily: HAND, fontWeight: 700, fontSize: 130 * u, color, lineHeight: 1, whiteSpace: 'nowrap', width: 'max-content', opacity: wordP > 0 ? 1 : 0 }}>{label}</div>
         </div>
         <svg viewBox="0 0 100 34" width={240 * u} height={82 * u} style={{ display: 'block', overflow: 'visible', marginTop: -8 * u }}>
           {(() => {

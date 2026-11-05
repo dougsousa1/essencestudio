@@ -2,7 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Easing, interpolate, spring } from 'remotion';
 import { ensureFont, fontFamily } from '../../core/fonts';
 import type { EffectDef, EffectRenderProps } from '../types';
-import { fadeOut } from '../util';
+import { fadeOut, subtreeFilter } from '../util';
 
 // ---------------------------------------------------------------------------
 // Cards & interface effects: phone mock-up, checklist, UI world, chat
@@ -997,7 +997,8 @@ const AvsB: React.FC<EffectRenderProps<AvbProps>> = ({ props, frame, fps, durati
                   backgroundColor: '#2a2527',
                   boxShadow: `0 ${10 * u}px ${30 * u}px rgba(0,0,0,0.18)`,
                   transform: `scale(${sc})`,
-                  opacity: isWin ? 1 : 1 - 0.28 * k,
+                  // Dimmed through filter opacity(): a group fade in the MP4 export too (CSS opacity is applied per child there).
+                  filter: isWin ? undefined : subtreeFilter(`opacity(${1 - 0.28 * k})`),
                 }}
               >
                 <VideoCopy style={{ ...focusBox(cardW, cardH, width, height, zoom, 0.5, 0.36), filter: isWin ? 'none' : `grayscale(${0.15 + 0.75 * k})` }} />

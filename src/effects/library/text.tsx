@@ -764,7 +764,8 @@ const LowerThird: React.FC<EffectRenderProps<LowerProps>> = ({ props, frame, fps
       {/* Sizing copy. opacity 0, not visibility:hidden: the MP4 exporter ignores visibility. */}
       <div style={{ ...rowStyle, opacity: 0 }}>{content}</div>
       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${p * 100}%`, overflow: 'hidden' }}>
-        <div style={{ ...rowStyle, width: 'max-content' }}>
+        {/* opacity 0 at width 0: the MP4 exporter does not clip with a zero-size overflow box. */}
+        <div style={{ ...rowStyle, width: 'max-content', opacity: p > 0 ? 1 : 0 }}>
           <div style={{ transform: `translateX(${(1 - p) * -30 * u}px)` }}>{content}</div>
         </div>
       </div>
