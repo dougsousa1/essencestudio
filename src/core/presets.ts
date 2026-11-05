@@ -4,9 +4,9 @@ export type Palette = { id: string; name: string; colors: Style['colors'] };
 
 export const PALETTES: Palette[] = [
   { id: 'azul', name: 'Azul', colors: { text: '#FFFFFF', accent: '#3B82F6', background: '#0F172A', secondary: '#DBEAFE' } },
-  { id: 'rose', name: 'Rose', colors: { text: '#FFFFFF', accent: '#F2A9C0', background: '#1C1519', secondary: '#FBE7EE' } },
-  { id: 'cream', name: 'Cream', colors: { text: '#FFF8EC', accent: '#E9C98B', background: '#F3EBDD', secondary: '#2B241C' } },
-  { id: 'lemon', name: 'Lemon', colors: { text: '#FFFFFF', accent: '#F4E36B', background: '#1D1B12', secondary: '#FFF7C2' } },
+  { id: 'rose', name: 'Rosa', colors: { text: '#FFFFFF', accent: '#F2A9C0', background: '#1C1519', secondary: '#FBE7EE' } },
+  { id: 'cream', name: 'Creme', colors: { text: '#FFF8EC', accent: '#E9C98B', background: '#F3EBDD', secondary: '#2B241C' } },
+  { id: 'lemon', name: 'Limão', colors: { text: '#FFFFFF', accent: '#F4E36B', background: '#1D1B12', secondary: '#FFF7C2' } },
   { id: 'noir', name: 'Noir', colors: { text: '#FFFFFF', accent: '#FFFFFF', background: '#0E0E10', secondary: '#9A9AA2' } },
   { id: 'ocean', name: 'Ocean', colors: { text: '#FFFFFF', accent: '#7CC6FF', background: '#0B1622', secondary: '#D7ECFF' } },
   { id: 'mint', name: 'Mint', colors: { text: '#FFFFFF', accent: '#8FE3B7', background: '#0F1A15', secondary: '#E2FBEF' } },
@@ -42,7 +42,7 @@ export type LookMeta = {
 export const LOOKS: LookMeta[] = [
   {
     id: 'soft',
-    name: 'Soft',
+    name: 'Suave',
     tagline: 'Beleza, lifestyle, moda',
     description: 'Títulos serifados, tons creme, movimento suave e legenda discreta. Calmo e sofisticado.',
     style: {
@@ -65,7 +65,7 @@ export const LOOKS: LookMeta[] = [
   },
   {
     id: 'scrapbook',
-    name: 'Scrapbook',
+    name: 'Colagem',
     tagline: 'Criativo, divertido, colagem',
     description: 'Vídeo em moldura sobre estampa, palavras-chave em itálico e recortes de papel.',
     style: {
@@ -88,7 +88,7 @@ export const LOOKS: LookMeta[] = [
   },
   {
     id: 'signature',
-    name: 'Signature',
+    name: 'Editorial',
     tagline: 'Elegante, editorial, cinema',
     description: 'Título grande serifado com contador de tempo, legenda clara e zoom suave.',
     style: {
@@ -111,7 +111,7 @@ export const LOOKS: LookMeta[] = [
   },
   {
     id: 'headline',
-    name: 'Headline',
+    name: 'Manchete',
     tagline: 'Especialistas, coaches, marcas',
     description: 'Tipografia forte, palavra destacada com marca-texto e zoom de impacto. Limpo e fácil de ler.',
     style: {

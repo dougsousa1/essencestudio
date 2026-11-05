@@ -1,0 +1,7 @@
+{
+  "name": "essence-studio",
+  "version": "0.1.0",
+  "description": "Edita seus vídeos falando para a câmera em Reels prontos: cortes por palavra, legendas, títulos, efeitos de motion e sons, no seu estilo. Tudo no seu computador.",
+  "author": { "name": "Essence Studio" },
+  "skills": "./skills"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "essence-studio",
+  "owner": { "name": "Essence Studio" },
+  "plugins": [
+    {
+      "name": "essence-studio",
+      "source": "./",
+      "description": "Estúdio de Reels dentro do Claude: você escolhe o estilo na janela do estúdio e o Claude edita."
+    }
+  ]
+}

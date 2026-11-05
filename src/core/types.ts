@@ -101,6 +101,8 @@ export type EffectInstance = {
 };
 
 export type Project = {
+  /** 'static' when rendered locally by the plugin: media come from the Remotion public folder. */
+  assetBase?: 'static';
   video: VideoSource | null;
   words: Word[];
   effects: EffectInstance[];

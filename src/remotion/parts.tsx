@@ -4,7 +4,7 @@
 import React from 'react';
 import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Video } from '@remotion/media';
-import { Sequence } from 'remotion';
+import { Sequence, staticFile } from 'remotion';
 import { FPS, paginate } from '../core/timeline';
 import { fontFamily } from '../core/fonts';
 import type { Project, Style, Timeline, TimedWord } from '../core/types';
@@ -32,7 +32,7 @@ export const CutVideo: React.FC<{ project: Project; timeline: Timeline; style?: 
         return (
           <Sequence key={i} from={from} durationInFrames={dur} premountFor={15}>
             <Video
-              src={video.url}
+              src={project.assetBase === 'static' ? staticFile(video.url) : video.url}
               trimBefore={Math.round(seg.srcStart * FPS)}
               objectFit="cover"
               muted={muted}

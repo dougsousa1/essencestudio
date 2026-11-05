@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AbsoluteFill, Sequence, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Sequence, staticFile, useVideoConfig } from 'remotion';
 import { Audio } from '@remotion/media';
 import { buildTimeline, FPS } from '../core/timeline';
 import type { LookId, LookProps, Project, SfxId } from '../core/types';
@@ -16,7 +16,9 @@ export const LOOK_COMPONENTS: Record<LookId, React.FC<LookProps>> = {
   headline: HeadlineLook,
 };
 
-export const sfxUrl = (id: SfxId) => `${import.meta.env.BASE_URL}sfx/${id}.wav`;
+const base = (): string => ((import.meta as unknown as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? '/');
+/** Sound effect URL: Vite public folder in the browser, Remotion public folder in local renders. */
+export const sfxUrl = (id: SfxId, project?: Project) => (project?.assetBase === 'static' ? staticFile(`sfx/${id}.wav`) : `${base()}sfx/${id}.wav`);
 
 export type MainProps = { project: Project };
 
@@ -55,7 +57,7 @@ export const Main: React.FC<MainProps> = ({ project }) => {
       <EffectOverlays placed={placed} project={project} timeline={timeline} />
       {sfxCues.map((c, i) => (
         <Sequence key={i} from={Math.round(c.at * FPS)} durationInFrames={FPS * 2}>
-          <Audio src={sfxUrl(c.id)} volume={project.sound.volume} />
+          <Audio src={sfxUrl(c.id, project)} volume={project.sound.volume} />
         </Sequence>
       ))}
     </AbsoluteFill>
