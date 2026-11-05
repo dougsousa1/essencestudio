@@ -26,13 +26,22 @@ export const buildTimeline = (project: Project): Timeline => {
     keep = [[0, total]];
   } else if (cut.removeSilences) {
     keep = [];
+    // A removed word always forces a cut, even when the gap it leaves is short.
+    let cutSinceLast = false;
     for (const w of words) {
-      if (w.removed) continue;
+      if (w.removed) {
+        cutSinceLast = true;
+        continue;
+      }
       const s = Math.max(0, w.start - cut.padding);
       const e = Math.min(total, w.end + cut.padding);
       const last = keep[keep.length - 1];
-      if (last && s - last[1] <= cut.minSilence) last[1] = Math.max(last[1], e);
-      else keep.push([s, e]);
+      if (last && !cutSinceLast && s - last[1] <= cut.minSilence) last[1] = Math.max(last[1], e);
+      else {
+        if (last && s < last[1]) last[1] = s;
+        keep.push([s, e]);
+      }
+      cutSinceLast = false;
     }
   } else {
     // Keep everything except removed words.

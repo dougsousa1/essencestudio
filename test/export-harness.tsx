@@ -50,6 +50,7 @@ const blobToBase64 = (b: Blob) =>
       style: styleForLook(look),
       video: { url, name: 'test.mp4', durationInSeconds: duration, width: 540, height: 960 },
       words,
+      cut: { ...initialProject().cut, removeSilences: q.get('silences') !== '0' },
       title: { enabled: true, kicker: 'ESSENCE · 01', text: 'Teste de exportação', durationInSeconds: 1.5 },
     };
     log(`caption:\n${captionText(project)}`);

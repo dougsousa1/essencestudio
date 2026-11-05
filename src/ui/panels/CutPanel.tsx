@@ -15,6 +15,7 @@ export const CutPanel: React.FC = () => {
   const [text, setText] = useState('');
   const [tool, setTool] = useState<Tool>('cut');
   const [language, setLanguage] = useState('pt');
+  const [model, setModel] = useState<'base' | 'small'>('base');
   const abort = useRef<AbortController | null>(null);
   const timeline = useMemo(() => buildTimeline(project), [project]);
   const words = project.words;
@@ -32,7 +33,7 @@ export const CutPanel: React.FC = () => {
     abort.current = new AbortController();
     try {
       const blob = await fetch(video.url).then((r) => r.blob());
-      const result = await transcribeFile(blob, { language, onProgress: setProgress, signal: abort.current.signal });
+      const result = await transcribeFile(blob, { language, model, onProgress: setProgress, signal: abort.current.signal });
       setWords(autoEmphasis(markFillers(result)));
     } catch (e) {
       if ((e as Error).name !== 'AbortError') setError((e as Error).message || 'Falha na transcrição.');
@@ -75,6 +76,15 @@ export const CutPanel: React.FC = () => {
                 { value: 'es', label: 'Español' },
               ]}
             />
+            <Segmented
+              value={model}
+              onChange={setModel}
+              options={[
+                { value: 'base', label: 'Rápida · 200 MB' },
+                { value: 'small', label: 'Mais precisa · 590 MB' },
+              ]}
+            />
+            <p className="text-[11px] text-muted">O modelo de IA é baixado só na primeira vez. Use o Google Chrome.</p>
             <Button variant="primary" className="w-full" onClick={run} disabled={!video}>
               ✦ Transcrever automaticamente
             </Button>

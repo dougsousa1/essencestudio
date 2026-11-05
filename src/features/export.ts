@@ -116,7 +116,8 @@ export function captionText(project: Project): string {
   if (!text) return titleText;
   const m = text.match(/^(.+?[.!?…])(\s|$)/);
   let hook = (m ? m[1] : text.split(' ').slice(0, 12).join(' ')).trim();
-  const rest = text.slice(m ? m[1].length : hook.length).trim();
+  let rest = text.slice(m ? m[1].length : hook.length).trim();
+  rest = rest.charAt(0).toUpperCase() + rest.slice(1);
   if (!m && rest) hook += '…';
 
   // Hashtags: emphasis words first, then the most frequent long content words.
