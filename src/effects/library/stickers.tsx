@@ -3,7 +3,7 @@ import { AbsoluteFill, Easing, interpolate, spring } from 'remotion';
 import { evolvePath } from '@remotion/paths';
 import { ensureFont, fontFamily } from '../../core/fonts';
 import type { EffectDef, EffectRenderProps } from '../types';
-import { fadeOut, pop, px, rand } from '../util';
+import { fadeOut, pop, px, rand, subtreeFilter } from '../util';
 
 // ---------------------------------------------------------------------------
 // Stickers & collage: polaroids of the footage, hand-drawn doodles that
@@ -66,7 +66,7 @@ const Footage: React.FC<{
   const top = clamp(h / 2 - focusY * ih, h - ih, 0);
   return (
     <div style={{ position: 'relative', width: w, height: h, overflow: 'hidden', backgroundColor: '#D8CBB8' }}>
-      <div style={{ position: 'absolute', left, top, width: iw, height: ih, filter }}>
+      <div style={{ position: 'absolute', left, top, width: iw, height: ih, filter: filter ? subtreeFilter(filter) : undefined }}>
         <VideoCopy />
       </div>
     </div>
@@ -177,7 +177,7 @@ const PolaroidOrbit: React.FC<EffectRenderProps<OrbitProps>> = ({ props, frame, 
           left: x,
           top: y,
           transform: `translate(-50%, -50%) rotate(${rot}deg) skewY(${skew}deg) scale(${scale})`,
-          filter: `brightness(${0.62 + 0.38 * k}) blur(${(1 - k) * 2.6 * u}px)`,
+          filter: subtreeFilter(`brightness(${0.62 + 0.38 * k}) blur(${(1 - k) * 2.6 * u}px)`),
           opacity: 0.72 + 0.28 * k,
         }}
       >
@@ -392,7 +392,8 @@ const Doodles: React.FC<EffectRenderProps<DoodleProps>> = ({ props, frame, fps, 
         style={{
           position: 'absolute',
           left: width * 0.6,
-          top: height * 0.64,
+          // keep clear of the captions on square / landscape frames
+          top: height * (height > width * 1.2 ? 0.6 : 0.47),
           transform: `translate(${wj(1) * 2 * u}px, ${wj(2) * 2 * u}px) rotate(${-8 + wj(3) * 1.5}deg)`,
           filter: shadow,
         }}

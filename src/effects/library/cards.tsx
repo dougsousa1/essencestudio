@@ -720,15 +720,16 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
             const tp = springAt(frame, fps, m.typingFrom, 14, 200);
             return (
               <div key={i} style={{ alignSelf: 'flex-start', position: 'relative', marginLeft: 12 * u, transform: `scale(${0.6 + 0.4 * tp})`, transformOrigin: '0% 100%', opacity: clamp01(tp * 1.5), filter: bubbleShadow }}>
+                {/* Tail first: the MP4 exporter ignores zIndex and paints in DOM order. */}
+                <svg width={32 * u} height={32 * u} viewBox="0 0 32 32" style={{ position: 'absolute', left: -12 * u, bottom: 0 }}>
+                  <path d={TAIL_THEM} fill={themBg} />
+                </svg>
                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 9 * u, padding: `${24 * u}px ${30 * u}px`, borderRadius: 40 * u, backgroundColor: themBg }}>
                   {[0, 1, 2].map((k) => {
                     const w = Math.sin((t - m.typingFrom) * 9 - k * 0.9);
                     return <div key={k} style={{ width: 14 * u, height: 14 * u, borderRadius: '50%', backgroundColor: '#8E8C93', opacity: 0.45 + 0.4 * Math.max(0, w), transform: `translateY(${-Math.max(0, w) * 5 * u}px)` }} />;
                   })}
                 </div>
-                <svg width={32 * u} height={32 * u} viewBox="0 0 32 32" style={{ position: 'absolute', left: -12 * u, bottom: 0 }}>
-                  <path d={TAIL_THEM} fill={themBg} />
-                </svg>
               </div>
             );
           }
@@ -747,6 +748,10 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
                 transformOrigin: m.me ? '100% 100%' : '0% 100%',
               }}
             >
+              {/* Tail first: the MP4 exporter ignores zIndex and paints in DOM order. */}
+              <svg width={32 * u} height={32 * u} viewBox="0 0 32 32" style={{ position: 'absolute', bottom: 0, left: m.me ? undefined : -12 * u, right: m.me ? -12 * u : undefined }}>
+                <path d={m.me ? TAIL_ME : TAIL_THEM} fill={bg} />
+              </svg>
               <div
                 style={{
                   position: 'relative',
@@ -761,9 +766,6 @@ const ChatMessages: React.FC<EffectRenderProps<ChatProps>> = ({ props, frame, fp
               >
                 {m.text}
               </div>
-              <svg width={32 * u} height={32 * u} viewBox="0 0 32 32" style={{ position: 'absolute', bottom: 0, left: m.me ? undefined : -12 * u, right: m.me ? -12 * u : undefined }}>
-                <path d={m.me ? TAIL_ME : TAIL_THEM} fill={bg} />
-              </svg>
               {m.me && i === lastMe ? (
                 <div style={{ position: 'absolute', right: 6 * u, top: '100%', marginTop: 6 * u, fontSize: 20 * u, fontWeight: 600, color: 'rgba(255,255,255,0.85)', textShadow: `0 ${1 * u}px ${6 * u}px rgba(0,0,0,0.5)`, opacity: ramp(frame, fps, m.at + 0.35, 0.25) }}>Lida</div>
               ) : null}

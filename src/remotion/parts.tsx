@@ -19,8 +19,13 @@ export const gradeFilter = (g: Style['grade']) => {
 export const CutVideo: React.FC<{ project: Project; timeline: Timeline; style?: React.CSSProperties; muted?: boolean }> = ({ project, timeline, style, muted }) => {
   const video = project.video;
   if (!video) return null;
+  // The MP4 exporter only applies a filter to an element's own paint, not to its
+  // children, so a filter passed in `style` (VideoCopy grades / blurs) goes on the
+  // <Video> canvas itself, after the grade — same result as filtering the wrapper.
+  const { filter: extraFilter, ...wrapperStyle } = style ?? {};
+  const filter = [gradeFilter(project.style.grade), extraFilter && extraFilter !== 'none' ? String(extraFilter) : ''].filter(Boolean).join(' ');
   return (
-    <AbsoluteFill style={{ ...style }}>
+    <AbsoluteFill style={wrapperStyle}>
       {timeline.segments.map((seg, i) => {
         const from = Math.round(seg.outStart * FPS);
         const dur = Math.max(1, Math.round((seg.srcEnd - seg.srcStart) * FPS));
@@ -31,7 +36,7 @@ export const CutVideo: React.FC<{ project: Project; timeline: Timeline; style?: 
               trimBefore={Math.round(seg.srcStart * FPS)}
               objectFit="cover"
               muted={muted}
-              style={{ width: '100%', height: '100%', filter: gradeFilter(project.style.grade) }}
+              style={{ width: '100%', height: '100%', filter }}
             />
           </Sequence>
         );

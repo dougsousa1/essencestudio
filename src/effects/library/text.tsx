@@ -1,10 +1,9 @@
 import React from 'react';
 import { AbsoluteFill, Easing, interpolate, interpolateColors, spring } from 'remotion';
 import { evolvePath } from '@remotion/paths';
-import { Circle, Highlight, StrikeThrough } from '@remotion/rough-notation';
 import { fontFamily } from '../../core/fonts';
 import type { EffectDef, EffectRenderProps } from '../types';
-import { fadeOut, px, rand } from '../util';
+import { fadeOut, px, rand, subtreeFilter } from '../util';
 
 // ---------------------------------------------------------------------------
 // Animated title: the entrance motions from the motion library (fade in,
@@ -88,7 +87,8 @@ const AnimatedTitle: React.FC<EffectRenderProps<TitleProps>> = ({ props, frame, 
 // Typography effects. Adapted from the Remocn registry (MIT, https://remocn.dev:
 // typewriter, marker-highlight, value-swap, infinite-marquee, mask-reveal-up,
 // rgb-glitch-text), Remotion Elements (text-marker, circle-marker,
-// strike-through, name-lower-third — built on @remotion/rough-notation) and the
+// strike-through — the rough-notation look, redrawn export-safe — and
+// name-lower-third) and the
 // motion library effects 13 (typewriter), 16 (ticker), 17 (highlight),
 // 18 (text swap) and 20 (mask reveal).
 // ===========================================================================
@@ -179,6 +179,137 @@ const TypewriterFx: React.FC<EffectRenderProps<TypeProps>> = ({ props, frame, fp
   );
 };
 
+// --- Hand-drawn annotations ---------------------------------------------------
+// Same idea as @remotion/rough-notation (used by Remotion Elements' text-marker,
+// circle-marker and strike-through), redrawn here so it survives the MP4 export:
+// the exporter clips an <svg> to its own box, so the SVG is sized to the measured
+// word (+ padding) and every stroke stays inside it. Draw-on uses evolvePath.
+
+type MarkKind = 'highlight' | 'circle' | 'strike';
+
+/** Measures an element's layout box (unscaled, so it works inside the scaled Player). */
+const useBox = (ref: React.RefObject<HTMLElement | null>, frame: number) => {
+  const [box, setBox] = React.useState<{ w: number; h: number } | null>(null);
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    setBox((b) => (b && b.w === w && b.h === h ? b : { w, h }));
+  }, [ref, frame]);
+  return box;
+};
+
+/** A wobbly, slightly overshooting hand-drawn ellipse as a polyline path. */
+const roughEllipse = (cx: number, cy: number, rx: number, ry: number, seed: number) => {
+  const n = 84;
+  const turns = 1.1;
+  const a0 = -Math.PI * 0.62 + (rand(seed) - 0.5) * 0.4;
+  const p1 = rand(seed + 1.3) * Math.PI * 2;
+  const p2 = rand(seed + 2.7) * Math.PI * 2;
+  const pts: string[] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const a = a0 + t * turns * Math.PI * 2;
+    const k = 1 + 0.03 * Math.sin(2 * a + p1) + 0.018 * Math.sin(3 * a + p2) - 0.06 * t;
+    pts.push(`${(cx + Math.cos(a) * rx * k).toFixed(1)} ${(cy + Math.sin(a) * ry * k).toFixed(1)}`);
+  }
+  return `M${pts.join(' L')}`;
+};
+
+const Marked: React.FC<{
+  kind: MarkKind;
+  progress: number;
+  color: string;
+  seed: number;
+  u: number;
+  frame: number;
+  strokeWidth?: number;
+  textStyle?: React.CSSProperties;
+  children: React.ReactNode;
+}> = ({ kind, progress, color, seed, u, frame, strokeWidth, textStyle, children }) => {
+  const ref = React.useRef<HTMLSpanElement>(null);
+  const box = useBox(ref, frame);
+  let svg: React.ReactNode = null;
+  if (box && progress > 0.001) {
+    const sw = strokeWidth ?? 12 * u;
+    // Circle radii: an ellipse has to be ~√2× the half-box to clear the corners of the word.
+    const rx = box.w * 0.56 + 26 * u;
+    const ry = box.h * 0.62 + 10 * u;
+    const padX = kind === 'circle' ? rx * 1.06 + sw - box.w / 2 : kind === 'highlight' ? 16 * u : 20 * u;
+    const padY = kind === 'circle' ? ry * 1.06 + sw - box.h / 2 : 10 * u;
+    const W = box.w + padX * 2;
+    const H = box.h + padY * 2;
+    const strokes: Array<{ d: string; sw: number; p: number; opacity: number }> = [];
+    const fills: Array<{ d: string; opacity: number }> = [];
+    if (kind === 'highlight') {
+      // Marker block revealed left → right, with ragged edges, a slight upward tilt and slanted tips.
+      const layer = (p: number, dy: number, sd: number) => {
+        if (p <= 0.001) return;
+        const x0 = padX * 0.35;
+        const x1 = W - padX * 0.35;
+        const xe = x0 + (x1 - x0) * p;
+        const top = padY + box.h * 0.2 + dy;
+        const bot = padY + box.h * 0.94 + dy;
+        const tilt = -7 * u;
+        const n = 18;
+        const at = (x: number, base: number, k: number) => base + (tilt * (x - x0)) / (x1 - x0) + (rand(sd + k * 3.7) - 0.5) * 5 * u;
+        const tp: string[] = [];
+        const bp: string[] = [];
+        for (let i = 0; i <= n; i++) {
+          const x = x0 + ((x1 - x0) * i) / n;
+          if (x >= xe) break;
+          tp.push(`${(x + 6 * u).toFixed(1)} ${at(x, top, i).toFixed(1)}`);
+          bp.push(`${x.toFixed(1)} ${at(x, bot, i + 40).toFixed(1)}`);
+        }
+        tp.push(`${(xe + 6 * u).toFixed(1)} ${at(xe, top, 99).toFixed(1)}`);
+        bp.push(`${xe.toFixed(1)} ${at(xe, bot, 140).toFixed(1)}`);
+        fills.push({ d: `M${tp.join(' L')} L${bp.reverse().join(' L')} Z`, opacity: sd === seed ? 0.9 : 0.45 });
+      };
+      layer(progress, 0, seed);
+      layer(clamp(progress * 1.12 - 0.12, 0, 1), 5 * u, seed + 17);
+    } else if (kind === 'circle') {
+      strokes.push({ d: roughEllipse(W / 2, H / 2, rx, ry, seed), sw, p: progress, opacity: 1 });
+    } else {
+      const y = padY + box.h * 0.6;
+      strokes.push({ d: `M ${6 * u} ${y + 4 * u} Q ${W * 0.55} ${y - 6 * u} ${W - 6 * u} ${y - 2 * u}`, sw, p: progress, opacity: 1 });
+    }
+    svg = (
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', left: -padX, top: -padY }}>
+        {fills.map((f, i) => (
+          <path key={`f${i}`} d={f.d} fill={color} fillOpacity={f.opacity} />
+        ))}
+        {strokes.map((st, i) => {
+          if (st.p <= 0.001) return null;
+          const ev = evolvePath(st.p, st.d);
+          return (
+            <path
+              key={i}
+              d={st.d}
+              fill="none"
+              stroke={color}
+              strokeOpacity={st.opacity}
+              strokeWidth={st.sw}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray={ev.strokeDasharray}
+              strokeDashoffset={ev.strokeDashoffset}
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+  // DOM order = paint order (also in the exporter): marker behind the text, pen strokes on top.
+  return (
+    <span ref={ref} style={{ position: 'relative', display: 'inline-block', whiteSpace: 'pre' }}>
+      {kind === 'highlight' ? svg : null}
+      <span style={{ position: 'relative', ...textStyle }}>{children}</span>
+      {kind !== 'highlight' ? svg : null}
+    </span>
+  );
+};
+
 // --- Marker highlight (Remocn "marker-highlight" + Elements "text-marker") ----
 
 type MarkerProps = { text: string; highlight: string };
@@ -201,6 +332,7 @@ const MarkerHighlight: React.FC<EffectRenderProps<MarkerProps>> = ({ props, fram
   const accent = style.colors.accent;
   const ink = inkOn(accent);
   const appear = spring({ frame, fps, config: { damping: 16, stiffness: 150 } });
+  // 0.4 s left → right sweep (motion library #17), spring-eased like Elements' Text Marker.
   const mp = interpolate(frame, [0.35 * fps, 0.95 * fps], [0, 1], {
     ...CLAMP,
     easing: Easing.spring({ damping: 200, mass: 1, stiffness: 100, allowTail: true, durationRestThreshold: 0.02, overshootClamping: false }),
@@ -227,18 +359,9 @@ const MarkerHighlight: React.FC<EffectRenderProps<MarkerProps>> = ({ props, fram
         }}
       >
         {before}
-        <Highlight
-          progress={mp}
-          color={withAlpha(accent, 0.94)}
-          roughness={2.3}
-          maxRandomnessOffset={10 * u}
-          bowing={0}
-          seed={7}
-          padding={{ left: 16 * u, right: 16 * u }}
-          style={{ color: markColor, textShadow: mp > 0.5 ? 'none' : shadowFor(u) }}
-        >
+        <Marked kind="highlight" progress={mp} color={accent} seed={7} u={u} frame={frame} textStyle={{ color: markColor, textShadow: mp > 0.5 ? 'none' : shadowFor(u) }}>
           {mark}
-        </Highlight>
+        </Marked>
         {after}
       </div>
     </AbsoluteFill>
@@ -256,7 +379,7 @@ const markWordLayout = (text: string, u: number, width: number, height: number, 
   top: height * 0.44,
   textAlign: 'center',
   fontFamily: fontFamily(style.titleFont),
-  fontSize: fitSize(text, width * 0.68, 150 * u, 0.55),
+  fontSize: fitSize(text, width * 0.66, 150 * u, 0.55),
   fontWeight: 700,
   lineHeight: 1.1,
   color: style.colors.text,
@@ -268,22 +391,15 @@ const CircleWord: React.FC<EffectRenderProps<MarkWordProps>> = ({ props, frame, 
   const out = fadeOut(frame, durationInFrames, fps);
   const text = (props.text || word || 'essência').trim();
   const appear = spring({ frame, fps, config: { damping: 14, stiffness: 170 } });
-  // Stop-motion feel: progress and seed advance in steps (as in Elements' Circle Marker).
+  // Stop-motion feel: progress and the wobble seed advance in steps (as in Elements' Circle Marker).
   const progress = interpolate(frame, [0.2 * fps, 0.95 * fps], [0, 1], { ...CLAMP, easing: Easing.bezier(0.42, 0, 0.58, 1), posterize: 3 });
   const seed = 1 + Math.floor(frame / 4);
   return (
     <AbsoluteFill style={{ opacity: out }}>
       <div style={{ ...markWordLayout(text, u, width, height, style), transform: `translateY(-50%) scale(${0.85 + 0.15 * appear})`, opacity: clamp(appear * 1.5, 0, 1) }}>
-        <Circle
-          progress={progress}
-          seed={seed}
-          roughness={1.8}
-          strokeWidth={11 * u}
-          color={style.colors.accent}
-          padding={{ left: 34 * u, right: 34 * u, top: 20 * u, bottom: 20 * u }}
-        >
+        <Marked kind="circle" progress={progress} color={style.colors.accent} seed={seed} u={u} frame={frame} strokeWidth={11 * u}>
           {text}
-        </Circle>
+        </Marked>
       </div>
     </AbsoluteFill>
   );
@@ -308,17 +424,9 @@ const StrikeWord: React.FC<EffectRenderProps<MarkWordProps>> = ({ props, frame, 
           opacity: clamp(appear * 1.5, 0, 1),
         }}
       >
-        <StrikeThrough
-          progress={progress}
-          color={color}
-          strokeWidth={16 * u}
-          roughness={1.6}
-          seed={3}
-          // The line sits at the box centre: extend the box downwards so it crosses the x-height.
-          style={{ opacity: dim, paddingBottom: '0.26em', marginBottom: '-0.26em' }}
-        >
+        <Marked kind="strike" progress={progress} color={color} seed={3} u={u} frame={frame} strokeWidth={15 * u} textStyle={{ opacity: dim }}>
           {text}
-        </StrikeThrough>
+        </Marked>
       </div>
     </AbsoluteFill>
   );
@@ -386,7 +494,7 @@ const TextSwap: React.FC<EffectRenderProps<SwapProps>> = ({ props, frame, fps, d
                   top: 0,
                   textAlign: 'center',
                   transform: `translateY(${y}px) scale(${last ? landPop : 1})`,
-                  filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
+                  filter: blur > 0.05 ? subtreeFilter(`blur(${blur}px)`) : undefined,
                 }}
               >
                 <span

@@ -65,7 +65,8 @@ const HeadlineIntro: React.FC<LookProps> = ({ project, width, height }) => {
           borderRadius: '50%',
           backgroundColor: s.colors.accent,
           opacity: 0.16,
-          filter: `blur(${140 * scale}px)`,
+          // drop-shadow makes the exporter blur the whole layer (otherwise border-radius clips the blur).
+          filter: `blur(${140 * scale}px) drop-shadow(0 0 0 rgba(0,0,0,0))`,
         }}
       />
 

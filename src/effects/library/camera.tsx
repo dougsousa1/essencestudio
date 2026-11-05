@@ -3,7 +3,7 @@ import { AbsoluteFill, Easing, Img, interpolate, spring } from 'remotion';
 import { fontFamily } from '../../core/fonts';
 import type { Style } from '../../core/types';
 import type { EffectDef, EffectRenderProps } from '../types';
-import { fadeOut, px, rand } from '../util';
+import { fadeOut, px, rand, subtreeFilter } from '../util';
 
 // ---------------------------------------------------------------------------
 // Camera & transitions: effects that move / regrade the footage itself.
@@ -453,7 +453,7 @@ const CarouselBackdrop: React.FC<FX<CarouselProps>> = ({ props, frame, fps, dura
           borderRadius: '50%',
           backgroundColor: style.colors.accent,
           opacity: 0.22,
-          filter: `blur(${90 * s}px)`,
+          filter: subtreeFilter(`blur(${90 * s}px)`), // drop-shadow trick: unclipped blur in the export
         }}
       />
       <AbsoluteFill style={{ transform: `scale(${g})` }}>
@@ -467,11 +467,12 @@ const CarouselBackdrop: React.FC<FX<CarouselProps>> = ({ props, frame, fps, dura
             height: '5%',
             borderRadius: '50%',
             backgroundColor: 'rgba(70,45,35,0.32)',
-            filter: `blur(${22 * s}px)`,
+            filter: subtreeFilter(`blur(${22 * s}px)`),
             opacity: spread,
           }}
         />
-        {CAR_SLOTS.map((slot) => {
+        {/* Back-to-front DOM order: the MP4 exporter ignores zIndex. */}
+        {[...CAR_SLOTS].sort((a, b) => Math.cos((wrapDeg(a * 72 + phi) * spread * Math.PI) / 180) - Math.cos((wrapDeg(b * 72 + phi) * spread * Math.PI) / 180)).map((slot) => {
           const theta = wrapDeg(slot * 72 + phi) * spread;
           const rad = (theta * Math.PI) / 180;
           const cz = Math.cos(rad);
@@ -625,7 +626,7 @@ const GlassType: React.FC<FX<GlassProps>> = ({ props, frame, fps, durationInFram
           display: 'flex',
           justifyContent: 'center',
           transform: `scale(${scale})`,
-          filter: blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : undefined,
+          filter: blur > 0.05 ? subtreeFilter(`blur(${blur.toFixed(2)}px)`) : undefined,
         }}
       >
         <div style={{ position: 'relative', display: 'inline-block' }}>
